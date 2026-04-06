@@ -108,4 +108,4 @@ Voor volledige FLIR SDK-functionaliteit: compileer de native tool via `tools/fli
 
 ## Licentie
 
-Privégebruik.
+Privégebruik. Zie [Privacy Policy](lib/screens/privacy_screen.dart) in de app.
