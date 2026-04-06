@@ -1,0 +1,43 @@
+name: mijn_gradient_app
+description: Thermal gradient analysis for electrical conductors using calibrated thermographic data.
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.11.1
+
+dependencies:
+  flutter:
+    sdk: flutter
+  cupertino_icons: ^1.0.8
+
+  # State management
+  flutter_bloc: ^8.1.6
+  equatable: ^2.0.5
+
+  # Charts
+  fl_chart: ^0.69.0
+
+  # File handling
+  desktop_drop: ^0.6.0
+  file_picker: ^8.0.0+1
+  csv: ^6.0.0
+  path_provider: ^2.1.4
+  share_plus: ^10.0.0
+  excel: ^4.0.6
+
+  # Storage
+  shared_preferences: ^2.3.2
+
+  # DI & utilities
+  get_it: ^8.0.0
+  uuid: ^4.5.1
+  intl: ^0.20.1
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+
+flutter:
+  uses-material-design: true
