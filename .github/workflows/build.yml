@@ -5,11 +5,6 @@ on:
     tags:
       - 'v*.*.*'
   workflow_dispatch:
-    inputs:
-      version:
-        description: 'Versienummer (bijv. 1.0.0)'
-        required: false
-        default: ''
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -77,11 +72,11 @@ jobs:
         run: flutter build windows --release
 
       - name: Artifact inpakken
+        shell: pwsh
         run: |
           Compress-Archive `
             -Path build\windows\x64\runner\Release\* `
             -DestinationPath MijnGradientApp-Windows.zip
-        shell: pwsh
 
       - name: Artifact uploaden
         uses: actions/upload-artifact@v4
@@ -91,7 +86,7 @@ jobs:
           retention-days: 14
 
   # ─────────────────────────────────────────────
-  # Android
+  # Android (debug signing — geen keystore nodig)
   # ─────────────────────────────────────────────
   build-android:
     name: Android
@@ -115,25 +110,6 @@ jobs:
       - name: Afhankelijkheden ophalen
         run: flutter pub get
 
-      # ── Optioneel: signing met keystore uit secrets ──────────────────────
-      # Maak de onderstaande secrets aan in GitHub → Settings → Secrets:
-      #   ANDROID_KEYSTORE_BASE64  — base64 van je .jks bestand
-      #   ANDROID_KEY_ALIAS        — alias in de keystore
-      #   ANDROID_KEY_PASSWORD     — wachtwoord van de key
-      #   ANDROID_STORE_PASSWORD   — wachtwoord van de keystore
-      - name: Keystore instellen (optioneel)
-        if: ${{ secrets.ANDROID_KEYSTORE_BASE64 != '' }}
-        env:
-          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
-        run: |
-          echo "$ANDROID_KEYSTORE_BASE64" | base64 --decode > android/app/release.jks
-          cat >> android/key.properties <<EOF
-          storeFile=release.jks
-          storePassword=${{ secrets.ANDROID_STORE_PASSWORD }}
-          keyAlias=${{ secrets.ANDROID_KEY_ALIAS }}
-          keyPassword=${{ secrets.ANDROID_KEY_PASSWORD }}
-          EOF
-
       - name: Build APK release
         run: flutter build apk --release
 
@@ -150,7 +126,7 @@ jobs:
           retention-days: 14
 
   # ─────────────────────────────────────────────
-  # iOS (geen codesigning — alleen archief)
+  # iOS (geen codesigning)
   # ─────────────────────────────────────────────
   build-ios:
     name: iOS
@@ -168,63 +144,15 @@ jobs:
       - name: Afhankelijkheden ophalen
         run: flutter pub get
 
-      # ── Optioneel: codesigning via secrets ─────────────────────────────
-      # Maak de onderstaande secrets aan voor een gesigneerde IPA:
-      #   IOS_CERTIFICATE_P12_BASE64  — base64 van je .p12 distributiecertificaat
-      #   IOS_CERTIFICATE_PASSWORD    — wachtwoord van het .p12 bestand
-      #   IOS_PROVISIONING_PROFILE_BASE64 — base64 van je .mobileprovision bestand
-      #   IOS_KEYCHAIN_PASSWORD       — willekeurig wachtwoord voor tijdelijke keychain
-      - name: Certificaten installeren (optioneel)
-        if: ${{ secrets.IOS_CERTIFICATE_P12_BASE64 != '' }}
-        env:
-          P12_BASE64: ${{ secrets.IOS_CERTIFICATE_P12_BASE64 }}
-          P12_PASSWORD: ${{ secrets.IOS_CERTIFICATE_PASSWORD }}
-          PP_BASE64: ${{ secrets.IOS_PROVISIONING_PROFILE_BASE64 }}
-          KC_PASSWORD: ${{ secrets.IOS_KEYCHAIN_PASSWORD }}
-        run: |
-          # Tijdelijke keychain aanmaken
-          security create-keychain -p "$KC_PASSWORD" build.keychain
-          security default-keychain -s build.keychain
-          security unlock-keychain -p "$KC_PASSWORD" build.keychain
-          security set-keychain-settings -t 3600 -u build.keychain
-
-          # Certificaat importeren
-          echo "$P12_BASE64" | base64 --decode > certificate.p12
-          security import certificate.p12 -k build.keychain \
-            -P "$P12_PASSWORD" -T /usr/bin/codesign
-          security set-key-partition-list -S apple-tool:,apple: \
-            -s -k "$KC_PASSWORD" build.keychain
-
-          # Provisioning profile installeren
-          echo "$PP_BASE64" | base64 --decode > profile.mobileprovision
-          mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
-          cp profile.mobileprovision \
-            ~/Library/MobileDevice/Provisioning\ Profiles/
-
       - name: Build iOS (zonder codesign)
-        if: ${{ secrets.IOS_CERTIFICATE_P12_BASE64 == '' }}
         run: flutter build ios --release --no-codesign
 
-      - name: Build iOS (met codesign)
-        if: ${{ secrets.IOS_CERTIFICATE_P12_BASE64 != '' }}
-        run: flutter build ipa --release
-
-      - name: IPA inpakken (zonder signing → .xcarchive als zip)
-        if: ${{ secrets.IOS_CERTIFICATE_P12_BASE64 == '' }}
+      - name: Artifact inpakken als zip
         run: |
           cd build/ios/archive
           zip -r ../../../MijnGradientApp-iOS-unsigned.zip Runner.xcarchive
 
-      - name: Artifact uploaden (gesigneerd)
-        if: ${{ secrets.IOS_CERTIFICATE_P12_BASE64 != '' }}
-        uses: actions/upload-artifact@v4
-        with:
-          name: MijnGradientApp-iOS
-          path: build/ios/ipa/*.ipa
-          retention-days: 14
-
-      - name: Artifact uploaden (niet gesigneerd)
-        if: ${{ secrets.IOS_CERTIFICATE_P12_BASE64 == '' }}
+      - name: Artifact uploaden
         uses: actions/upload-artifact@v4
         with:
           name: MijnGradientApp-iOS-unsigned
@@ -257,10 +185,9 @@ jobs:
           body: |
             ## MijnGradientApp ${{ github.ref_name }}
 
-            ### Downloads
             | Platform | Bestand |
             |----------|---------|
             | macOS    | `MijnGradientApp-macOS.zip` |
             | Windows  | `MijnGradientApp-Windows.zip` |
-            | Android  | `app-release.apk` / `app-release.aab` |
-            | iOS      | `MijnGradientApp-iOS.ipa` (of unsigned xcarchive) |
+            | Android  | `app-release.apk` + `app-release.aab` |
+            | iOS      | `MijnGradientApp-iOS-unsigned.zip` (xcarchive, niet gesigneerd) |
