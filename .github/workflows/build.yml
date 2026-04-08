@@ -160,6 +160,34 @@ jobs:
           retention-days: 14
 
   # ─────────────────────────────────────────────
+  # GitHub Pages publiceren (altijd, bij elke push naar main)
+  # ─────────────────────────────────────────────
+  deploy-pages:
+    name: GitHub Pages
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v')
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Pages configureren
+        uses: actions/configure-pages@v5
+
+      - name: Docs uploaden
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: docs/
+
+      - name: Publiceren
+        id: deployment
+        uses: actions/deploy-pages@v4
+
+  # ─────────────────────────────────────────────
   # Release aanmaken bij tag-push
   # ─────────────────────────────────────────────
   release:

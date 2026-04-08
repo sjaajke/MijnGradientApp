@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MijnGradientApp — Thermische indicator K</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #0f1117;
+      color: #e2e8f0;
+      min-height: 100vh;
+    }
+
+    /* ── Hero ── */
+    .hero {
+      background: linear-gradient(135deg, #1a237e 0%, #283593 50%, #1565c0 100%);
+      padding: 64px 24px 48px;
+      text-align: center;
+    }
+    .hero-icon {
+      font-size: 64px;
+      margin-bottom: 16px;
+      display: block;
+    }
+    .hero h1 {
+      font-size: clamp(1.8rem, 5vw, 3rem);
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      color: #fff;
+    }
+    .hero .subtitle {
+      margin-top: 12px;
+      font-size: 1.1rem;
+      color: rgba(255,255,255,0.78);
+      max-width: 560px;
+      margin-left: auto;
+      margin-right: auto;
+      line-height: 1.55;
+    }
+    .formula {
+      display: inline-block;
+      margin-top: 20px;
+      background: rgba(255,255,255,0.12);
+      border: 1px solid rgba(255,255,255,0.22);
+      border-radius: 10px;
+      padding: 10px 24px;
+      font-size: 1.25rem;
+      font-family: 'Courier New', monospace;
+      color: #fff;
+      letter-spacing: 1px;
+    }
+
+    /* ── Download section ── */
+    .section {
+      max-width: 860px;
+      margin: 0 auto;
+      padding: 48px 24px;
+    }
+    .section-title {
+      font-size: 1.4rem;
+      font-weight: 700;
+      color: #90caf9;
+      margin-bottom: 24px;
+      text-align: center;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      font-size: 0.85rem;
+    }
+
+    /* ── Version badge ── */
+    #version-badge {
+      text-align: center;
+      margin-bottom: 28px;
+    }
+    #version-badge span {
+      background: #1e3a5f;
+      border: 1px solid #2d6a9f;
+      border-radius: 20px;
+      padding: 4px 16px;
+      font-size: 0.85rem;
+      color: #90caf9;
+      font-family: monospace;
+    }
+
+    /* ── Download cards ── */
+    .platforms {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 16px;
+    }
+    .platform-card {
+      background: #1a2035;
+      border: 1px solid #2a3555;
+      border-radius: 16px;
+      padding: 24px 16px;
+      text-align: center;
+      transition: transform 0.15s, border-color 0.15s;
+    }
+    .platform-card:hover { transform: translateY(-3px); border-color: #4a90d9; }
+    .platform-card .icon { font-size: 2.6rem; margin-bottom: 10px; display: block; }
+    .platform-card h3 { font-size: 1rem; font-weight: 700; color: #e2e8f0; margin-bottom: 6px; }
+    .platform-card .ext { font-size: 0.75rem; color: #64748b; font-family: monospace; margin-bottom: 14px; }
+    .dl-btn {
+      display: inline-block;
+      background: linear-gradient(135deg, #1565c0, #1976d2);
+      color: #fff;
+      text-decoration: none;
+      border-radius: 8px;
+      padding: 8px 18px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      transition: opacity 0.15s;
+    }
+    .dl-btn:hover { opacity: 0.85; }
+    .dl-btn.disabled {
+      background: #2a3555;
+      color: #475569;
+      pointer-events: none;
+      cursor: default;
+    }
+
+    /* ── Features ── */
+    .features {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 16px;
+    }
+    .feature {
+      background: #1a2035;
+      border: 1px solid #2a3555;
+      border-radius: 12px;
+      padding: 20px;
+    }
+    .feature .feat-icon { font-size: 1.6rem; margin-bottom: 8px; }
+    .feature h4 { font-size: 0.95rem; font-weight: 700; color: #e2e8f0; margin-bottom: 6px; }
+    .feature p { font-size: 0.82rem; color: #94a3b8; line-height: 1.5; }
+
+    /* ── Divider ── */
+    .divider {
+      border: none;
+      border-top: 1px solid #2a3555;
+      margin: 0 24px;
+    }
+
+    /* ── Footer ── */
+    footer {
+      text-align: center;
+      padding: 32px 24px;
+      color: #475569;
+      font-size: 0.8rem;
+    }
+    footer a { color: #64748b; }
+
+    /* ── Loading spinner ── */
+    .loading { color: #64748b; font-size: 0.85rem; text-align: center; padding: 12px 0; }
+  </style>
+</head>
+<body>
+
+  <!-- Hero -->
+  <div class="hero">
+    <span class="hero-icon">🌡️</span>
+    <h1>MijnGradientApp</h1>
+    <p class="subtitle">
+      Analyseer thermografische FLIR-metingen aan elektrische verbindingen.
+      Bereken de genormaliseerde thermische weerstand en detecteer afwijkende verbindingen.
+    </p>
+    <div class="formula">K = ΔT / I²</div>
+  </div>
+
+  <!-- Downloads -->
+  <div class="section">
+    <p class="section-title">Download</p>
+
+    <div id="version-badge"><span>versie laden…</span></div>
+
+    <div class="platforms">
+
+      <div class="platform-card">
+        <span class="icon">🍎</span>
+        <h3>macOS</h3>
+        <div class="ext">.app (zip)</div>
+        <a id="dl-macos" class="dl-btn disabled" href="#">Laden…</a>
+      </div>
+
+      <div class="platform-card">
+        <span class="icon">🪟</span>
+        <h3>Windows</h3>
+        <div class="ext">.exe (zip)</div>
+        <a id="dl-windows" class="dl-btn disabled" href="#">Laden…</a>
+      </div>
+
+      <div class="platform-card">
+        <span class="icon">🤖</span>
+        <h3>Android</h3>
+        <div class="ext">.apk</div>
+        <a id="dl-android" class="dl-btn disabled" href="#">Laden…</a>
+      </div>
+
+      <div class="platform-card">
+        <span class="icon">📱</span>
+        <h3>iOS</h3>
+        <div class="ext">.app (zip)</div>
+        <a id="dl-ios" class="dl-btn disabled" href="#">Laden…</a>
+      </div>
+
+    </div>
+
+    <p style="text-align:center;margin-top:20px;font-size:0.8rem;color:#475569;">
+      Alle releases bekijken →
+      <a href="https://github.com/sjaajke/MijnGradientApp/releases" style="color:#90caf9;">
+        github.com/sjaajke/MijnGradientApp/releases
+      </a>
+    </p>
+  </div>
+
+  <hr class="divider" />
+
+  <!-- Features -->
+  <div class="section">
+    <p class="section-title">Wat doet de app?</p>
+    <div class="features">
+
+      <div class="feature">
+        <div class="feat-icon">📷</div>
+        <h4>FLIR-afbeeldingen inlezen</h4>
+        <p>Open radiometrische FLIR-JPEG's via bestandskiezer of drag-and-drop. Meetpunten worden automatisch uitgelezen en toegewezen.</p>
+      </div>
+
+      <div class="feature">
+        <div class="feat-icon">✏️</div>
+        <h4>FLIR Editor</h4>
+        <p>Verplaats, voeg toe of verwijder meetpunten direct op de thermische afbeelding via de Teledyne FLIR Atlas C SDK.</p>
+      </div>
+
+      <div class="feature">
+        <div class="feat-icon">⚡</div>
+        <h4>K-indicator berekenen</h4>
+        <p>Bereken K = ΔT / I² voor 6 meetpunten inclusief foutpropagatie δK op basis van stroom- en temperatuurfouten.</p>
+      </div>
+
+      <div class="feature">
+        <div class="feat-icon">📊</div>
+        <h4>SNR-vergelijking</h4>
+        <p>Vergelijk K-waarden paarsgewijs én kruislings. SNR &gt; 3 duidt op een significante afwijking — mogelijk een slechte verbinding.</p>
+      </div>
+
+      <div class="feature">
+        <div class="feat-icon">🗂️</div>
+        <h4>Sessiehistorie</h4>
+        <p>Sla meetresultaten op, bekijk eerdere sessies en laad ze terug voor vergelijking.</p>
+      </div>
+
+      <div class="feature">
+        <div class="feat-icon">📤</div>
+        <h4>Excel-export</h4>
+        <p>Exporteer alle metingen en berekeningen naar een .xlsx-bestand en deel dit via het systeem-deelvenster.</p>
+      </div>
+
+    </div>
+  </div>
+
+  <hr class="divider" />
+
+  <!-- Footer -->
+  <footer>
+    <p>
+      MijnGradientApp — privégebruik &nbsp;|&nbsp;
+      <a href="https://github.com/sjaajke/MijnGradientApp">GitHub</a>
+    </p>
+  </footer>
+
+  <script>
+    const REPO = 'sjaajke/MijnGradientApp';
+    const API  = `https://api.github.com/repos/${REPO}/releases/latest`;
+
+    async function loadRelease() {
+      try {
+        const res = await fetch(API, {
+          headers: { Accept: 'application/vnd.github+json' }
+        });
+        if (!res.ok) throw new Error(res.status);
+        const data = await res.json();
+
+        // Versie badge
+        document.getElementById('version-badge').innerHTML =
+          `<span>Nieuwste versie: ${data.tag_name}</span>`;
+
+        const assets = data.assets || [];
+
+        function findUrl(patterns) {
+          for (const pat of patterns) {
+            const a = assets.find(a => a.name.toLowerCase().includes(pat));
+            if (a) return a.browser_download_url;
+          }
+          return null;
+        }
+
+        function setLink(id, url, label) {
+          const el = document.getElementById(id);
+          if (url) {
+            el.href = url;
+            el.textContent = label;
+            el.classList.remove('disabled');
+          } else {
+            el.textContent = 'Niet beschikbaar';
+          }
+        }
+
+        setLink('dl-macos',   findUrl(['macos']),   'Download macOS');
+        setLink('dl-windows', findUrl(['windows']), 'Download Windows');
+        setLink('dl-android', findUrl(['apk']),     'Download APK');
+        setLink('dl-ios',     findUrl(['ios']),     'Download iOS');
+
+      } catch (e) {
+        document.getElementById('version-badge').innerHTML =
+          `<span style="color:#ef5350;">Release niet gevonden</span>`;
+        ['dl-macos','dl-windows','dl-android','dl-ios'].forEach(id => {
+          const el = document.getElementById(id);
+          el.textContent = 'Niet beschikbaar';
+        });
+      }
+    }
+
+    loadRelease();
+  </script>
+
+</body>
+</html>
