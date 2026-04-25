@@ -341,6 +341,8 @@ class _ThermalIndicatorScreenState extends State<ThermalIndicatorScreen> {
       final corrFactor = pow(iRatio, n) as double;
       final dtPercent = (dTA - corrFactor * dTB) / dTA * 100.0;
       final dtAbsolute = dTA - corrFactor * dTB;
+      final iAn = pow(mA.current, n) as double;
+      final iBn = pow(mB.current, n) as double;
       corr = _DeltaTCorrected(
         dtCorrected: dTA - ratio * dTB,
         deltaI2T: iA2 / dTA - iB2 / dTB,
@@ -349,6 +351,8 @@ class _ThermalIndicatorScreenState extends State<ThermalIndicatorScreen> {
         deltaTperI2: (iA2 > 1e-6 && iB2 > 1e-6) ? dTA / iA2 - dTB / iB2 : double.nan,
         dtPercent: dtPercent,
         dtAbsolute: dtAbsolute,
+        kAn: iAn > 1e-6 ? dTA / iAn : double.nan,
+        kBn: iBn > 1e-6 ? dTB / iBn : double.nan,
         n: n,
       );
     }
@@ -1451,6 +1455,11 @@ class _ResultCard extends StatelessWidget {
                 unit: '°C',
                 highlight: true,
               ),
+              _KnCompareRow(
+                kAn: deltaTCorr!.kAn,
+                kBn: deltaTCorr!.kBn,
+                n: deltaTCorr!.n,
+              ),
               const SizedBox(height: 4),
               _CorrRow(
                 formula: '(T₁−Tamb) − (I₁/I₂)²×(T₂−Tamb)',
@@ -1641,6 +1650,66 @@ class _CorrRow extends StatelessWidget {
         border: Border.all(color: color.withValues(alpha: 0.3)),
       ),
       child: row,
+    );
+  }
+}
+
+class _KnCompareRow extends StatelessWidget {
+  final double kAn;
+  final double kBn;
+  final double n;
+
+  const _KnCompareRow({
+    required this.kAn,
+    required this.kBn,
+    required this.n,
+  });
+
+  String _fmt(double v) =>
+      v.isNaN ? '—' : v.toStringAsExponential(3);
+
+  @override
+  Widget build(BuildContext context) {
+    final equal = !kAn.isNaN && !kBn.isNaN && (kAn - kBn).abs() / (kAn.abs() + 1e-20) < 0.05;
+    final color = kAn.isNaN || kBn.isNaN
+        ? Colors.grey
+        : equal
+            ? AppTheme.statusOk
+            : AppTheme.statusFault;
+    final nStr = n.toStringAsFixed(1);
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(6),
+        border: Border.all(color: color.withValues(alpha: 0.3)),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Text(
+              'ΔT₁/I₁ⁿ = ΔT₂/I₂ⁿ  (n=$nStr)',
+              style: const TextStyle(
+                fontSize: 11,
+                fontFamily: 'monospace',
+                fontWeight: FontWeight.bold,
+                color: Colors.black,
+              ),
+            ),
+          ),
+          Text(
+            '${_fmt(kAn)}  =  ${_fmt(kBn)}',
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w700,
+              fontFamily: 'monospace',
+              color: color,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -2643,7 +2712,13 @@ class _DeltaTCorrected {
   /// ΔT_A − (I_A/I_B)^n × ΔT_B  [°C]
   final double dtAbsolute;
 
-  /// Exponent n gebruikt in dtPercent en dtAbsolute
+  /// ΔT_A / I_A^n  [°C/A^n]
+  final double kAn;
+
+  /// ΔT_B / I_B^n  [°C/A^n]
+  final double kBn;
+
+  /// Exponent n gebruikt in dtPercent, dtAbsolute, kAn en kBn
   final double n;
 
   const _DeltaTCorrected({
@@ -2654,6 +2729,8 @@ class _DeltaTCorrected {
     required this.deltaTperI2,
     required this.dtPercent,
     required this.dtAbsolute,
+    required this.kAn,
+    required this.kBn,
     required this.n,
   });
 }
