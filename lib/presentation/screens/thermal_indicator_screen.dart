@@ -338,7 +338,9 @@ class _ThermalIndicatorScreenState extends State<ThermalIndicatorScreen> {
     if (iB2.abs() > 1e-6 && dTA.abs() > 1e-6 && dTB.abs() > 1e-6) {
       final ratio = iA2 / iB2;
       final iRatio = mA.current / mB.current; // I_A / I_B
-      final dtPercent = (dTA - pow(iRatio, n) * dTB) / dTA * 100.0;
+      final corrFactor = pow(iRatio, n) as double;
+      final dtPercent = (dTA - corrFactor * dTB) / dTA * 100.0;
+      final dtAbsolute = dTA - corrFactor * dTB;
       corr = _DeltaTCorrected(
         dtCorrected: dTA - ratio * dTB,
         deltaI2T: iA2 / dTA - iB2 / dTB,
@@ -346,6 +348,7 @@ class _ThermalIndicatorScreenState extends State<ThermalIndicatorScreen> {
         deltaT2: dTA - ratio * dTB,
         deltaTperI2: (iA2 > 1e-6 && iB2 > 1e-6) ? dTA / iA2 - dTB / iB2 : double.nan,
         dtPercent: dtPercent,
+        dtAbsolute: dtAbsolute,
         n: n,
       );
     }
@@ -1440,6 +1443,12 @@ class _ResultCard extends StatelessWidget {
                 formula: 'ΔT% = [ΔT₁ − (I₁/I₂)ⁿ × ΔT₂] / ΔT₁ × 100%  (n=${deltaTCorr!.n.toStringAsFixed(1)})',
                 value: deltaTCorr!.dtPercent,
                 unit: '%',
+                highlight: true,
+              ),
+              _CorrRow(
+                formula: 'ΔT  = ΔT₁ − (I₁/I₂)ⁿ × ΔT₂  (n=${deltaTCorr!.n.toStringAsFixed(1)})',
+                value: deltaTCorr!.dtAbsolute,
+                unit: '°C',
                 highlight: true,
               ),
               const SizedBox(height: 4),
@@ -2631,7 +2640,10 @@ class _DeltaTCorrected {
   /// [ΔT_A − (I_A/I_B)^n × ΔT_B] / ΔT_A × 100 %
   final double dtPercent;
 
-  /// Exponent n gebruikt in dtPercent
+  /// ΔT_A − (I_A/I_B)^n × ΔT_B  [°C]
+  final double dtAbsolute;
+
+  /// Exponent n gebruikt in dtPercent en dtAbsolute
   final double n;
 
   const _DeltaTCorrected({
@@ -2641,6 +2653,7 @@ class _DeltaTCorrected {
     required this.deltaT2,
     required this.deltaTperI2,
     required this.dtPercent,
+    required this.dtAbsolute,
     required this.n,
   });
 }
