@@ -777,15 +777,22 @@ class _ThermalIndicatorScreenState extends State<ThermalIndicatorScreen> {
     }
   }
 
-  /// Wist alle invoervelden (T, I, δI, δT) van een niet-toegewezen meting.
+  /// Wist T en I van een niet-toegewezen meting; foutmarges blijven op standaard.
   void _clearMeasurementFields(int measurement) {
+    void reset(TextEditingController tCtrl, TextEditingController iCtrl,
+        TextEditingController diCtrl, TextEditingController dtCtrl) {
+      tCtrl.text = '';
+      iCtrl.text = '';
+      diCtrl.text = '1';
+      dtCtrl.text = '0.5';
+    }
     switch (measurement) {
-      case 1: _t1Ctrl.text = ''; _i1Ctrl.text = ''; _di1Ctrl.text = ''; _dt1Ctrl.text = ''; break;
-      case 2: _t2Ctrl.text = ''; _i2Ctrl.text = ''; _di2Ctrl.text = ''; _dt2Ctrl.text = ''; break;
-      case 3: _t3Ctrl.text = ''; _i3Ctrl.text = ''; _di3Ctrl.text = ''; _dt3Ctrl.text = ''; break;
-      case 4: _t4Ctrl.text = ''; _i4Ctrl.text = ''; _di4Ctrl.text = ''; _dt4Ctrl.text = ''; break;
-      case 5: _t5Ctrl.text = ''; _i5Ctrl.text = ''; _di5Ctrl.text = ''; _dt5Ctrl.text = ''; break;
-      case 6: _t6Ctrl.text = ''; _i6Ctrl.text = ''; _di6Ctrl.text = ''; _dt6Ctrl.text = ''; break;
+      case 1: reset(_t1Ctrl, _i1Ctrl, _di1Ctrl, _dt1Ctrl); break;
+      case 2: reset(_t2Ctrl, _i2Ctrl, _di2Ctrl, _dt2Ctrl); break;
+      case 3: reset(_t3Ctrl, _i3Ctrl, _di3Ctrl, _dt3Ctrl); break;
+      case 4: reset(_t4Ctrl, _i4Ctrl, _di4Ctrl, _dt4Ctrl); break;
+      case 5: reset(_t5Ctrl, _i5Ctrl, _di5Ctrl, _dt5Ctrl); break;
+      case 6: reset(_t6Ctrl, _i6Ctrl, _di6Ctrl, _dt6Ctrl); break;
     }
   }
 
