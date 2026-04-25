@@ -218,10 +218,13 @@ class _ThermalIndicatorScreenState extends State<ThermalIndicatorScreen> {
 
     _CrossComparisonResult? cross;
     if (kEntries.isNotEmpty) {
-      // Reference: lowest K
-      final kRef = kEntries.last;
+      // Reference: Meting 1 (id == 1); fall back to first entry if not present
+      final kRef = kEntries.firstWhere(
+        (e) => e.id == 1,
+        orElse: () => kEntries.first,
+      );
       final enriched = kEntries.map((e) {
-        if (e == kRef) return e.copyWith(snr: 0, snrLevel: SnrLevel.notSignificant);
+        if (e.id == kRef.id) return e.copyWith(snr: 0, snrLevel: SnrLevel.notSignificant);
         final dKCombined = _sqrt(e.dk * e.dk + kRef.dk * kRef.dk);
         final snr = dKCombined > 1e-20 ? (e.k - kRef.k) / dKCombined : 0.0;
         final level = snr >= 3
