@@ -119,28 +119,44 @@ class _ThermalIndicatorScreenState extends State<ThermalIndicatorScreen> {
   _CrossComparisonResult? _crossComparison;
   bool _isExporting = false;
 
+  List<TextEditingController> get _allMeasurementCtrls => [
+        _i1Ctrl, _t1Ctrl, _di1Ctrl, _dt1Ctrl,
+        _i2Ctrl, _t2Ctrl, _di2Ctrl, _dt2Ctrl,
+        _i3Ctrl, _t3Ctrl, _di3Ctrl, _dt3Ctrl,
+        _i4Ctrl, _t4Ctrl, _di4Ctrl, _dt4Ctrl,
+        _i5Ctrl, _t5Ctrl, _di5Ctrl, _dt5Ctrl,
+        _i6Ctrl, _t6Ctrl, _di6Ctrl, _dt6Ctrl,
+        _tambCtrl,
+      ];
+
   @override
   void initState() {
     super.initState();
     _loadRecentImages();
     ThermalIndicatorSessionStore.pendingLoad.addListener(_onPendingLoadChanged);
+    // Wis berekeningen zodra een invoerveld wijzigt
+    for (final c in _allMeasurementCtrls) {
+      c.addListener(_clearResults);
+    }
     // Already-queued session (e.g. loaded before this screen built)
     _onPendingLoadChanged();
+  }
+
+  void _clearResults() {
+    if (_results.isNotEmpty || _crossComparison != null) {
+      setState(() {
+        _results = const [];
+        _crossComparison = null;
+      });
+    }
   }
 
   @override
   void dispose() {
     ThermalIndicatorSessionStore.pendingLoad
         .removeListener(_onPendingLoadChanged);
-    for (final c in [
-      _i1Ctrl, _t1Ctrl, _di1Ctrl, _dt1Ctrl,
-      _i2Ctrl, _t2Ctrl, _di2Ctrl, _dt2Ctrl,
-      _i3Ctrl, _t3Ctrl, _di3Ctrl, _dt3Ctrl,
-      _i4Ctrl, _t4Ctrl, _di4Ctrl, _dt4Ctrl,
-      _i5Ctrl, _t5Ctrl, _di5Ctrl, _dt5Ctrl,
-      _i6Ctrl, _t6Ctrl, _di6Ctrl, _dt6Ctrl,
-      _tambCtrl,
-    ]) {
+    for (final c in _allMeasurementCtrls) {
+      c.removeListener(_clearResults);
       c.dispose();
     }
     super.dispose();
