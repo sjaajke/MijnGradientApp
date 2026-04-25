@@ -435,6 +435,7 @@ class _ThermalIndicatorScreenState extends State<ThermalIndicatorScreen> {
       }
       // Clear any unassigned measurements
       for (int m = allPoints.length + 1; m <= 6; m++) {
+        _clearMeasurementFields(m);
         _setSourceLabel(m, 'Handmatige invoer');
       }
     });
@@ -773,6 +774,18 @@ class _ThermalIndicatorScreenState extends State<ThermalIndicatorScreen> {
       case 4: _t4Ctrl.text = value; break;
       case 5: _t5Ctrl.text = value; break;
       case 6: _t6Ctrl.text = value; break;
+    }
+  }
+
+  /// Wist alle invoervelden (T, I, δI, δT) van een niet-toegewezen meting.
+  void _clearMeasurementFields(int measurement) {
+    switch (measurement) {
+      case 1: _t1Ctrl.text = ''; _i1Ctrl.text = ''; _di1Ctrl.text = ''; _dt1Ctrl.text = ''; break;
+      case 2: _t2Ctrl.text = ''; _i2Ctrl.text = ''; _di2Ctrl.text = ''; _dt2Ctrl.text = ''; break;
+      case 3: _t3Ctrl.text = ''; _i3Ctrl.text = ''; _di3Ctrl.text = ''; _dt3Ctrl.text = ''; break;
+      case 4: _t4Ctrl.text = ''; _i4Ctrl.text = ''; _di4Ctrl.text = ''; _dt4Ctrl.text = ''; break;
+      case 5: _t5Ctrl.text = ''; _i5Ctrl.text = ''; _di5Ctrl.text = ''; _dt5Ctrl.text = ''; break;
+      case 6: _t6Ctrl.text = ''; _i6Ctrl.text = ''; _di6Ctrl.text = ''; _dt6Ctrl.text = ''; break;
     }
   }
 
