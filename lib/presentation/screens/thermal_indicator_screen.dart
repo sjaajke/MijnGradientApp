@@ -1,6 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
-import 'dart:math' show sqrt;
+import 'dart:math' show sqrt, pow;
 import 'dart:ui' as ui;
 
 import 'package:desktop_drop/desktop_drop.dart';
@@ -70,6 +70,9 @@ class _ThermalIndicatorScreenState extends State<ThermalIndicatorScreen> {
   // ── Gedeelde omgevingstemperatuur ────────────────────────────────────────
   final _tambCtrl = TextEditingController(text: '20');
 
+  // ── Exponent n voor ΔT%-formule ───────────────────────────────────────────
+  final _nCtrl = TextEditingController(text: '2');
+
   static const _defaultFlirData = _ExtractedFlirData(
     imagePath: _flirImagePath,
     fileName: 'IR_12078 (1).jpg',
@@ -126,7 +129,7 @@ class _ThermalIndicatorScreenState extends State<ThermalIndicatorScreen> {
         _i4Ctrl, _t4Ctrl, _di4Ctrl, _dt4Ctrl,
         _i5Ctrl, _t5Ctrl, _di5Ctrl, _dt5Ctrl,
         _i6Ctrl, _t6Ctrl, _di6Ctrl, _dt6Ctrl,
-        _tambCtrl,
+        _tambCtrl, _nCtrl,
       ];
 
   @override
@@ -330,15 +333,20 @@ class _ThermalIndicatorScreenState extends State<ThermalIndicatorScreen> {
     final iA2 = mA.current * mA.current;
     final iB2 = mB.current * mB.current;
 
+    final n = double.tryParse(_nCtrl.text) ?? 2.0;
     _DeltaTCorrected? corr;
     if (iB2.abs() > 1e-6 && dTA.abs() > 1e-6 && dTB.abs() > 1e-6) {
       final ratio = iA2 / iB2;
+      final iRatio = mA.current / mB.current; // I_A / I_B
+      final dtPercent = (dTA - pow(iRatio, n) * dTB) / dTA * 100.0;
       corr = _DeltaTCorrected(
         dtCorrected: dTA - ratio * dTB,
         deltaI2T: iA2 / dTA - iB2 / dTB,
         deltaI2ratio: ratio - dTA / dTB,
         deltaT2: dTA - ratio * dTB,
         deltaTperI2: (iA2 > 1e-6 && iB2 > 1e-6) ? dTA / iA2 - dTB / iB2 : double.nan,
+        dtPercent: dtPercent,
+        n: n,
       );
     }
 
@@ -1094,6 +1102,34 @@ class _ThermalIndicatorScreenState extends State<ThermalIndicatorScreen> {
 
           const SizedBox(height: 12),
 
+          // Exponent n voor ΔT%-formule
+          Row(
+            children: [
+              const Expanded(
+                child: Text(
+                  'Exponent n  (ΔT% formule)',
+                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500),
+                ),
+              ),
+              SizedBox(
+                width: 72,
+                child: TextField(
+                  controller: _nCtrl,
+                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                  textAlign: TextAlign.center,
+                  decoration: const InputDecoration(
+                    isDense: true,
+                    border: OutlineInputBorder(),
+                    contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                    hintText: '2',
+                  ),
+                ),
+              ),
+            ],
+          ),
+
+          const SizedBox(height: 10),
+
           // Bereken knop
           FilledButton.icon(
             onPressed: _calculate,
@@ -1401,6 +1437,13 @@ class _ResultCard extends StatelessWidget {
               ),
               const SizedBox(height: 8),
               _CorrRow(
+                formula: 'ΔT% = [ΔT₁ − (I₁/I₂)ⁿ × ΔT₂] / ΔT₁ × 100%  (n=${deltaTCorr!.n.toStringAsFixed(1)})',
+                value: deltaTCorr!.dtPercent,
+                unit: '%',
+                highlight: true,
+              ),
+              const SizedBox(height: 4),
+              _CorrRow(
                 formula: '(T₁−Tamb) − (I₁/I₂)²×(T₂−Tamb)',
                 value: deltaTCorr!.dtCorrected,
                 unit: '°C',
@@ -1528,12 +1571,14 @@ class _CorrRow extends StatelessWidget {
   final double value;
   final String unit;
   final bool exponential;
+  final bool highlight;
 
   const _CorrRow({
     required this.formula,
     required this.value,
     required this.unit,
     this.exponential = false,
+    this.highlight = false,
   });
 
   @override
@@ -1547,27 +1592,46 @@ class _CorrRow extends StatelessWidget {
         ? '—'
         : exponential
             ? value.toStringAsExponential(3)
-            : value.toStringAsFixed(3);
+            : value.toStringAsFixed(2);
 
-    return Padding(
+    final row = Padding(
       padding: const EdgeInsets.symmetric(vertical: 2),
       child: Row(
         children: [
           Expanded(
-            child: Text(formula,
-                style: const TextStyle(fontSize: 11, fontFamily: 'monospace', color: Colors.black)),
+            child: Text(
+              formula,
+              style: TextStyle(
+                fontSize: 11,
+                fontFamily: 'monospace',
+                color: Colors.black,
+                fontWeight: highlight ? FontWeight.bold : FontWeight.normal,
+              ),
+            ),
           ),
           Text(
             '$display $unit',
             style: TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w600,
+              fontSize: highlight ? 13 : 12,
+              fontWeight: FontWeight.w700,
               fontFamily: 'monospace',
               color: color,
             ),
           ),
         ],
       ),
+    );
+
+    if (!highlight) return row;
+    return Container(
+      margin: const EdgeInsets.only(bottom: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(6),
+        border: Border.all(color: color.withValues(alpha: 0.3)),
+      ),
+      child: row,
     );
   }
 }
@@ -2564,12 +2628,20 @@ class _DeltaTCorrected {
   /// (T_A−Tamb)/I_A² − (T_B−Tamb)/I_B²
   final double deltaTperI2;
 
+  /// [ΔT_A − (I_A/I_B)^n × ΔT_B] / ΔT_A × 100 %
+  final double dtPercent;
+
+  /// Exponent n gebruikt in dtPercent
+  final double n;
+
   const _DeltaTCorrected({
     required this.dtCorrected,
     required this.deltaI2T,
     required this.deltaI2ratio,
     required this.deltaT2,
     required this.deltaTperI2,
+    required this.dtPercent,
+    required this.n,
   });
 }
 
