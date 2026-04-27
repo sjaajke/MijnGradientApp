@@ -1313,7 +1313,7 @@ class _MeasurementCardState extends State<_MeasurementCard> {
                         style: TextStyle(
                             fontSize: 12, color: widget.color)),
                     Text(
-                      k.toStringAsExponential(3),
+                      k.toStringAsFixed(3),
                       style: TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.bold,
@@ -1407,27 +1407,27 @@ class _ResultCard extends StatelessWidget {
               // K waarden
               _ResultRow(
                 label: 'K₁',
-                value: result.k1!.toStringAsExponential(4),
-                sub: '± ${result.dk1!.toStringAsExponential(2)}',
+                value: result.k1!.toStringAsFixed(3),
+                sub: '± ${result.dk1!.toStringAsFixed(3)}',
                 unit: '°C/A²',
                 color: AppTheme.chartA,
               ),
               _ResultRow(
                 label: 'K₂',
-                value: result.k2!.toStringAsExponential(4),
-                sub: '± ${result.dk2!.toStringAsExponential(2)}',
+                value: result.k2!.toStringAsFixed(3),
+                sub: '± ${result.dk2!.toStringAsFixed(3)}',
                 unit: '°C/A²',
                 color: AppTheme.chartB,
               ),
               const Divider(height: 16),
               _ResultRow(
                 label: 'ΔK = K₁ − K₂',
-                value: result.deltaK!.toStringAsExponential(4),
+                value: result.deltaK!.toStringAsFixed(3),
                 unit: '°C/A²',
               ),
               _ResultRow(
                 label: 'Onzekerheid d(ΔK)',
-                value: '± ${result.uncertainty!.toStringAsExponential(3)}',
+                value: '± ${result.uncertainty!.toStringAsFixed(3)}',
                 unit: '°C/A²',
               ),
               const Divider(height: 16),
@@ -1666,7 +1666,7 @@ class _KnCompareRow extends StatelessWidget {
   });
 
   String _fmt(double v) =>
-      v.isNaN ? '—' : v.toStringAsExponential(3);
+      v.isNaN ? '—' : v.toStringAsFixed(3);
 
   @override
   Widget build(BuildContext context) {
@@ -3274,7 +3274,7 @@ class _CrossComparisonCard extends StatelessWidget {
             const SizedBox(height: 6),
             Text(
               'Referentie (laagste K): ${kRef.label}  '
-              '(K = ${kRef.k.toStringAsExponential(3)} °C/A²). '
+              '(K = ${kRef.k.toStringAsFixed(3)} °C/A²). '
               'Hogere K-waarden duiden op hogere thermische weerstand.',
               style: TextStyle(fontSize: 12, color: Colors.grey.shade700),
             ),
@@ -3422,7 +3422,7 @@ class _KTableRow extends StatelessWidget {
               SizedBox(
                 width: 90,
                 child: Text(
-                  e.k.toStringAsExponential(3),
+                  e.k.toStringAsFixed(3),
                   style: const TextStyle(
                       fontSize: 12,
                       fontFamily: 'monospace',
