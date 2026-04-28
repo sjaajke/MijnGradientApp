@@ -2,8 +2,13 @@ name: Build & Release
 
 on:
   push:
+    branches:
+      - main
     tags:
       - 'v*.*.*'
+  pull_request:
+    branches:
+      - main
   workflow_dispatch:
 
 concurrency:
@@ -25,7 +30,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Flutter installeren
-        uses: subosito/flutter-action@v2
+        uses: subosito/flutter-action@v3
         with:
           flutter-version: ${{ env.FLUTTER_VERSION }}
           channel: stable
@@ -40,7 +45,7 @@ jobs:
       - name: App inpakken als zip
         run: |
           cd build/macos/Build/Products/Release
-          zip -r MijnGradientApp-macOS.zip "mijn_gradient_app.app"
+          zip -r MijnGradientApp-macOS.zip *.app
 
       - name: Artifact uploaden
         uses: actions/upload-artifact@v4
@@ -59,7 +64,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Flutter installeren
-        uses: subosito/flutter-action@v2
+        uses: subosito/flutter-action@v3
         with:
           flutter-version: ${{ env.FLUTTER_VERSION }}
           channel: stable
@@ -101,7 +106,7 @@ jobs:
           java-version: '17'
 
       - name: Flutter installeren
-        uses: subosito/flutter-action@v2
+        uses: subosito/flutter-action@v3
         with:
           flutter-version: ${{ env.FLUTTER_VERSION }}
           channel: stable
@@ -135,7 +140,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Flutter installeren
-        uses: subosito/flutter-action@v2
+        uses: subosito/flutter-action@v3
         with:
           flutter-version: ${{ env.FLUTTER_VERSION }}
           channel: stable
