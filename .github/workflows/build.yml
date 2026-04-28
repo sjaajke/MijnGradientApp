@@ -30,7 +30,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Flutter installeren
-        uses: subosito/flutter-action@v3
+        uses: subosito/flutter-action@v2
         with:
           flutter-version: ${{ env.FLUTTER_VERSION }}
           channel: stable
@@ -64,7 +64,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Flutter installeren
-        uses: subosito/flutter-action@v3
+        uses: subosito/flutter-action@v2
         with:
           flutter-version: ${{ env.FLUTTER_VERSION }}
           channel: stable
@@ -106,7 +106,7 @@ jobs:
           java-version: '17'
 
       - name: Flutter installeren
-        uses: subosito/flutter-action@v3
+        uses: subosito/flutter-action@v2
         with:
           flutter-version: ${{ env.FLUTTER_VERSION }}
           channel: stable
@@ -140,7 +140,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Flutter installeren
-        uses: subosito/flutter-action@v3
+        uses: subosito/flutter-action@v2
         with:
           flutter-version: ${{ env.FLUTTER_VERSION }}
           channel: stable
