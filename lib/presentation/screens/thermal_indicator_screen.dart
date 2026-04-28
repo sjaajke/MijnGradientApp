@@ -14,8 +14,10 @@ import '../../core/utils/excel_export_service.dart';
 import '../../core/utils/flir_extract_service.dart';
 import '../../core/utils/thermal_indicator_session.dart';
 import '../../core/utils/thermal_measurement.dart';
+import '../widgets/analysis_top_nav.dart';
 import 'flir_editor_dialog.dart';
 import 'npr_assessment_screen.dart';
+import 'regression_analysis_screen.dart';
 
 /// Screen for computing the normalized thermal indicator K = ΔT / I²
 /// and comparing two measurement points to detect bad electrical connections.
@@ -23,8 +25,7 @@ class ThermalIndicatorScreen extends StatefulWidget {
   const ThermalIndicatorScreen({super.key});
 
   @override
-  State<ThermalIndicatorScreen> createState() =>
-      _ThermalIndicatorScreenState();
+  State<ThermalIndicatorScreen> createState() => _ThermalIndicatorScreenState();
 }
 
 class _ThermalIndicatorScreenState extends State<ThermalIndicatorScreen> {
@@ -32,41 +33,21 @@ class _ThermalIndicatorScreenState extends State<ThermalIndicatorScreen> {
       '/Users/sjaaj/Downloads/§flir/IR_12078 (1).jpg';
   static const String _recentImagesKey = 'thermal_indicator_recent_images_v1';
 
-  // ── Controllers meting 1 ─────────────────────────────────────────────────
+  // ── Reeksstromen: I1 = meting 1,3,5 / I2 = meting 2,4,6 ─────────────────
   final _i1Ctrl = TextEditingController(text: '100');
-  final _t1Ctrl = TextEditingController(text: '41.0');
-  final _di1Ctrl = TextEditingController(text: '1');
-  final _dt1Ctrl = TextEditingController(text: '0.5');
-
-  // ── Controllers meting 2 ─────────────────────────────────────────────────
   final _i2Ctrl = TextEditingController(text: '100');
+
+  // ── Gedeelde meetonzekerheid (alle metingen) ──────────────────────────────
+  final _diCtrl = TextEditingController(text: '1');
+  final _dtCtrl = TextEditingController(text: '0.5');
+
+  // ── Temperatuurcontrollers per meting ─────────────────────────────────────
+  final _t1Ctrl = TextEditingController(text: '41.0');
   final _t2Ctrl = TextEditingController(text: '37.3');
-  final _di2Ctrl = TextEditingController(text: '1');
-  final _dt2Ctrl = TextEditingController(text: '0.5');
-
-  // ── Controllers meting 3 ─────────────────────────────────────────────────
-  final _i3Ctrl = TextEditingController(text: '100');
   final _t3Ctrl = TextEditingController(text: '40.1');
-  final _di3Ctrl = TextEditingController(text: '1');
-  final _dt3Ctrl = TextEditingController(text: '0.5');
-
-  // ── Controllers meting 4 ─────────────────────────────────────────────────
-  final _i4Ctrl = TextEditingController(text: '100');
   final _t4Ctrl = TextEditingController(text: '38.7');
-  final _di4Ctrl = TextEditingController(text: '1');
-  final _dt4Ctrl = TextEditingController(text: '0.5');
-
-  // ── Controllers meting 5 ─────────────────────────────────────────────────
-  final _i5Ctrl = TextEditingController(text: '100');
   final _t5Ctrl = TextEditingController(text: '37.7');
-  final _di5Ctrl = TextEditingController(text: '1');
-  final _dt5Ctrl = TextEditingController(text: '0.5');
-
-  // ── Controllers meting 6 ─────────────────────────────────────────────────
-  final _i6Ctrl = TextEditingController(text: '100');
   final _t6Ctrl = TextEditingController(text: '37.5');
-  final _di6Ctrl = TextEditingController(text: '1');
-  final _dt6Ctrl = TextEditingController(text: '0.5');
 
   // ── Gedeelde omgevingstemperatuur ────────────────────────────────────────
   final _tambCtrl = TextEditingController(text: '20');
@@ -89,16 +70,48 @@ class _ThermalIndicatorScreenState extends State<ThermalIndicatorScreen> {
     note:
         'Zichtbare overlay-data uit de aangeleverde JPEG. Volledige radiometrische pixeldata is in dit exportbestand niet bevestigd.',
     mappedPoints: [
-      _ExtractedThermalPoint(spot: 'Sp1', label: 'Meetpunt A1', temperature: 41.0),
-      _ExtractedThermalPoint(spot: 'Sp2', label: 'Meetpunt A2', temperature: 40.1),
-      _ExtractedThermalPoint(spot: 'Sp3', label: 'Meetpunt A3', temperature: 37.7),
-      _ExtractedThermalPoint(spot: 'Sp4', label: 'Meetpunt B1', temperature: 37.3),
-      _ExtractedThermalPoint(spot: 'Sp5', label: 'Meetpunt B2', temperature: 38.7),
-      _ExtractedThermalPoint(spot: 'Sp6', label: 'Meetpunt B3', temperature: 37.5),
+      _ExtractedThermalPoint(
+        spot: 'Sp1',
+        label: 'Meetpunt A1',
+        temperature: 41.0,
+      ),
+      _ExtractedThermalPoint(
+        spot: 'Sp2',
+        label: 'Meetpunt A2',
+        temperature: 40.1,
+      ),
+      _ExtractedThermalPoint(
+        spot: 'Sp3',
+        label: 'Meetpunt A3',
+        temperature: 37.7,
+      ),
+      _ExtractedThermalPoint(
+        spot: 'Sp4',
+        label: 'Meetpunt B1',
+        temperature: 37.3,
+      ),
+      _ExtractedThermalPoint(
+        spot: 'Sp5',
+        label: 'Meetpunt B2',
+        temperature: 38.7,
+      ),
+      _ExtractedThermalPoint(
+        spot: 'Sp6',
+        label: 'Meetpunt B3',
+        temperature: 37.5,
+      ),
     ],
     extraPoints: [
-      _ExtractedThermalPoint(spot: 'Sp7', label: 'Extra punt 1', temperature: 39.3),
-      _ExtractedThermalPoint(spot: 'Sp8', label: 'Extra punt 2', temperature: 36.7),
+      _ExtractedThermalPoint(
+        spot: 'Sp7',
+        label: 'Extra punt 1',
+        temperature: 39.3,
+      ),
+      _ExtractedThermalPoint(
+        spot: 'Sp8',
+        label: 'Extra punt 2',
+        temperature: 36.7,
+      ),
     ],
   );
 
@@ -124,14 +137,19 @@ class _ThermalIndicatorScreenState extends State<ThermalIndicatorScreen> {
   bool _isExporting = false;
 
   List<TextEditingController> get _allMeasurementCtrls => [
-        _i1Ctrl, _t1Ctrl, _di1Ctrl, _dt1Ctrl,
-        _i2Ctrl, _t2Ctrl, _di2Ctrl, _dt2Ctrl,
-        _i3Ctrl, _t3Ctrl, _di3Ctrl, _dt3Ctrl,
-        _i4Ctrl, _t4Ctrl, _di4Ctrl, _dt4Ctrl,
-        _i5Ctrl, _t5Ctrl, _di5Ctrl, _dt5Ctrl,
-        _i6Ctrl, _t6Ctrl, _di6Ctrl, _dt6Ctrl,
-        _tambCtrl, _nCtrl,
-      ];
+    _i1Ctrl,
+    _i2Ctrl,
+    _diCtrl,
+    _dtCtrl,
+    _t1Ctrl,
+    _t2Ctrl,
+    _t3Ctrl,
+    _t4Ctrl,
+    _t5Ctrl,
+    _t6Ctrl,
+    _tambCtrl,
+    _nCtrl,
+  ];
 
   @override
   void initState() {
@@ -157,8 +175,9 @@ class _ThermalIndicatorScreenState extends State<ThermalIndicatorScreen> {
 
   @override
   void dispose() {
-    ThermalIndicatorSessionStore.pendingLoad
-        .removeListener(_onPendingLoadChanged);
+    ThermalIndicatorSessionStore.pendingLoad.removeListener(
+      _onPendingLoadChanged,
+    );
     for (final c in _allMeasurementCtrls) {
       c.removeListener(_clearResults);
       c.dispose();
@@ -170,16 +189,67 @@ class _ThermalIndicatorScreenState extends State<ThermalIndicatorScreen> {
 
   double? _parse(TextEditingController c) => double.tryParse(c.text);
 
+  List<NprMeasurementData> _nprMeasurements() {
+    final bindings = _measurementBindings();
+    return bindings
+        .map(
+          (b) => NprMeasurementData(
+            label: b.label,
+            color: b.color,
+            temperature: double.tryParse(b.temperatureCtrl.text),
+            current: double.tryParse(b.currentCtrl.text),
+          ),
+        )
+        .toList();
+  }
+
+  List<RegressionMeasurementData> _regressionMeasurements() {
+    final bindings = _measurementBindings();
+    return bindings
+        .map(
+          (b) => RegressionMeasurementData(
+            label: b.label,
+            color: b.color,
+            temperature: double.tryParse(b.temperatureCtrl.text),
+            current: double.tryParse(b.currentCtrl.text),
+          ),
+        )
+        .toList();
+  }
+
+  void _openTopNavScreen(AnalysisTopNavScreen screen) {
+    switch (screen) {
+      case AnalysisTopNavScreen.thermal:
+        return;
+      case AnalysisTopNavScreen.npr:
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (_) => NprAssessmentScreen(
+              measurements: _nprMeasurements(),
+              tamb: double.tryParse(_tambCtrl.text),
+            ),
+          ),
+        );
+      case AnalysisTopNavScreen.regression:
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (_) => RegressionAnalysisScreen(
+              measurements: _regressionMeasurements(),
+              tamb: double.tryParse(_tambCtrl.text),
+            ),
+          ),
+        );
+    }
+  }
+
   ThermalMeasurement? _buildMeasurement(
     TextEditingController iCtrl,
     TextEditingController tCtrl,
-    TextEditingController diCtrl,
-    TextEditingController dtCtrl,
   ) {
     final i = _parse(iCtrl);
     final t = _parse(tCtrl);
-    final di = _parse(diCtrl);
-    final dt = _parse(dtCtrl);
+    final di = _parse(_diCtrl);
+    final dt = _parse(_dtCtrl);
     final tamb = _parse(_tambCtrl);
     if (i == null || t == null || di == null || dt == null || tamb == null) {
       return null;
@@ -194,14 +264,15 @@ class _ThermalIndicatorScreenState extends State<ThermalIndicatorScreen> {
   }
 
   void _calculate() {
-    final m1 = _buildMeasurement(_i1Ctrl, _t1Ctrl, _di1Ctrl, _dt1Ctrl);
-    final m2 = _buildMeasurement(_i2Ctrl, _t2Ctrl, _di2Ctrl, _dt2Ctrl);
-    final m3 = _buildMeasurement(_i3Ctrl, _t3Ctrl, _di3Ctrl, _dt3Ctrl);
-    final m4 = _buildMeasurement(_i4Ctrl, _t4Ctrl, _di4Ctrl, _dt4Ctrl);
-    final m5 = _buildMeasurement(_i5Ctrl, _t5Ctrl, _di5Ctrl, _dt5Ctrl);
-    final m6 = _buildMeasurement(_i6Ctrl, _t6Ctrl, _di6Ctrl, _dt6Ctrl);
+    final m1 = _buildMeasurement(_i1Ctrl, _t1Ctrl);
+    final m2 = _buildMeasurement(_i2Ctrl, _t2Ctrl);
+    final m3 = _buildMeasurement(_i1Ctrl, _t3Ctrl);
+    final m4 = _buildMeasurement(_i2Ctrl, _t4Ctrl);
+    final m5 = _buildMeasurement(_i1Ctrl, _t5Ctrl);
+    final m6 = _buildMeasurement(_i2Ctrl, _t6Ctrl);
 
-    const invalidMsg = 'Controleer de invoer — alle velden moeten geldige getallen bevatten.';
+    const invalidMsg =
+        'Controleer de invoer — alle velden moeten geldige getallen bevatten.';
 
     final bindings = _measurementBindings();
     final tamb = _parse(_tambCtrl) ?? 20.0;
@@ -217,22 +288,26 @@ class _ThermalIndicatorScreenState extends State<ThermalIndicatorScreen> {
       // dK/K = sqrt((dT/dT)^2 + (2·dI/I)^2)
       final relDt = m.temperatureError / dT;
       final relI = 2.0 * m.currentError / m.current;
-      final dk = k * (relDt * relDt + relI * relI <= 0
-          ? 0.0
-          : (relDt * relDt + relI * relI) < 1e-20
+      final dk =
+          k *
+          (relDt * relDt + relI * relI <= 0
+              ? 0.0
+              : (relDt * relDt + relI * relI) < 1e-20
               ? 0.0
               : _sqrt(relDt * relDt + relI * relI));
-      kEntries.add(_KEntry(
-        id: b.id,
-        label: b.label,
-        sourceLabel: b.sourceLabel,
-        color: b.color,
-        current: m.current,
-        temperature: m.temperature,
-        deltaT: dT,
-        k: k,
-        dk: dk,
-      ));
+      kEntries.add(
+        _KEntry(
+          id: b.id,
+          label: b.label,
+          sourceLabel: b.sourceLabel,
+          color: b.color,
+          current: m.current,
+          temperature: m.temperature,
+          deltaT: dT,
+          k: k,
+          dk: dk,
+        ),
+      );
     }
     kEntries.sort((a, b) => b.k.compareTo(a.k));
 
@@ -244,21 +319,19 @@ class _ThermalIndicatorScreenState extends State<ThermalIndicatorScreen> {
         orElse: () => kEntries.first,
       );
       final enriched = kEntries.map((e) {
-        if (e.id == kRef.id) return e.copyWith(snr: 0, snrLevel: SnrLevel.notSignificant);
+        if (e.id == kRef.id) {
+          return e.copyWith(snr: 0, snrLevel: SnrLevel.notSignificant);
+        }
         final dKCombined = _sqrt(e.dk * e.dk + kRef.dk * kRef.dk);
         final snr = dKCombined > 1e-20 ? (e.k - kRef.k) / dKCombined : 0.0;
         final level = snr >= 3
             ? SnrLevel.significant
             : snr >= 1
-                ? SnrLevel.uncertain
-                : SnrLevel.notSignificant;
+            ? SnrLevel.uncertain
+            : SnrLevel.notSignificant;
         return e.copyWith(snr: snr, snrLevel: level);
       }).toList();
-      cross = _CrossComparisonResult(
-        entries: enriched,
-        kRef: kRef,
-        tamb: tamb,
-      );
+      cross = _CrossComparisonResult(entries: enriched, kRef: kRef, tamb: tamb);
     }
 
     setState(() {
@@ -286,27 +359,29 @@ class _ThermalIndicatorScreenState extends State<ThermalIndicatorScreen> {
         final dt = _parse(b.temperatureErrorCtrl);
         if (i == null || t == null || di == null || dt == null) {
           _showMessage(
-              'Controleer de invoer — alle velden moeten geldige getallen bevatten.');
+            'Controleer de invoer — alle velden moeten geldige getallen bevatten.',
+          );
           return;
         }
-        rows.add(MeasurementExportRow(
-          label: b.label,
-          source: b.sourceLabel,
-          current: i,
-          currentError: di,
-          temperature: t,
-          temperatureError: dt,
-        ));
+        rows.add(
+          MeasurementExportRow(
+            label: b.label,
+            source: b.sourceLabel,
+            current: i,
+            currentError: di,
+            temperature: t,
+            temperatureError: dt,
+          ),
+        );
       }
       final tamb = _parse(_tambCtrl) ?? 20.0;
       final path = await ThermalExcelExportService.export(
         measurements: rows,
         tamb: tamb,
       );
-      await Share.shareXFiles(
-        [XFile(path)],
-        subject: 'Thermische indicator K — export',
-      );
+      await Share.shareXFiles([
+        XFile(path),
+      ], subject: 'Thermische indicator K — export');
     } catch (e) {
       _showExportError('$e');
     } finally {
@@ -349,7 +424,9 @@ class _ThermalIndicatorScreenState extends State<ThermalIndicatorScreen> {
         deltaI2T: iA2 / dTA - iB2 / dTB,
         deltaI2ratio: ratio - dTA / dTB,
         deltaT2: dTA - ratio * dTB,
-        deltaTperI2: (iA2 > 1e-6 && iB2 > 1e-6) ? dTA / iA2 - dTB / iB2 : double.nan,
+        deltaTperI2: (iA2 > 1e-6 && iB2 > 1e-6)
+            ? dTA / iA2 - dTB / iB2
+            : double.nan,
         dtPercent: dtPercent,
         dtAbsolute: dtAbsolute,
         kAn: iAn > 1e-6 ? dTA / iAn : double.nan,
@@ -358,7 +435,11 @@ class _ThermalIndicatorScreenState extends State<ThermalIndicatorScreen> {
       );
     }
 
-    return _ComparisonBlockResult(title: title, result: result, deltaTCorr: corr);
+    return _ComparisonBlockResult(
+      title: title,
+      result: result,
+      deltaTCorr: corr,
+    );
   }
 
   File? get _flirImageFile {
@@ -367,12 +448,12 @@ class _ThermalIndicatorScreenState extends State<ThermalIndicatorScreen> {
   }
 
   List<_PinnedImageEntry> get _pinnedImages => const [
-        _PinnedImageEntry(
-          title: 'Voorbeeld FLIR E95',
-          subtitle: 'Vooringevulde meetpunten A1 t/m B3',
-          path: _flirImagePath,
-        ),
-      ];
+    _PinnedImageEntry(
+      title: 'Voorbeeld FLIR E95',
+      subtitle: 'Vooringevulde meetpunten A1 t/m B3',
+      path: _flirImagePath,
+    ),
+  ];
 
   SharedPreferences get _prefs => sl<SharedPreferences>();
 
@@ -413,7 +494,11 @@ class _ThermalIndicatorScreenState extends State<ThermalIndicatorScreen> {
     final path = file.path;
     if (path == null) return;
 
-    await _loadImageFromPath(path, suggestedName: file.name, byteSize: file.size);
+    await _loadImageFromPath(
+      path,
+      suggestedName: file.name,
+      byteSize: file.size,
+    );
   }
 
   Future<void> _loadImageFromPath(
@@ -512,12 +597,8 @@ class _ThermalIndicatorScreenState extends State<ThermalIndicatorScreen> {
 
       // Split spots: first 6 as mapped, rest as extra
       final allSpots = flir.spots.where((s) => s.isValid).toList();
-      final mapped = allSpots.length > 6
-          ? allSpots.sublist(0, 6)
-          : allSpots;
-      final extra = allSpots.length > 6
-          ? allSpots.sublist(6)
-          : <FlirSpot>[];
+      final mapped = allSpots.length > 6 ? allSpots.sublist(0, 6) : allSpots;
+      final extra = allSpots.length > 6 ? allSpots.sublist(6) : <FlirSpot>[];
 
       return _ExtractedFlirData(
         imagePath: path,
@@ -535,24 +616,29 @@ class _ThermalIndicatorScreenState extends State<ThermalIndicatorScreen> {
         maxTemp: tp != null
             ? (cam?.rangeMax != null ? cam!.rangeMax - 273.15 : null)
             : null,
-        note: 'Radiometrische data uitgelezen via FLIR Atlas C SDK. '
+        note:
+            'Radiometrische data uitgelezen via FLIR Atlas C SDK. '
             'Camera: ${cam?.model ?? "?"}, '
             'Serienummer: ${cam?.serial ?? "?"}, '
             'Emissiviteit: ${tp?.emissivity.toStringAsFixed(2) ?? "?"}, '
             'Afstand: ${tp?.objectDistance.toStringAsFixed(1) ?? "?"} m.',
         mappedPoints: mapped
-            .map((s) => _ExtractedThermalPoint(
-                  spot: 'Sp${s.id}',
-                  label: s.label.isNotEmpty ? s.label : 'Sp${s.id}',
-                  temperature: s.temperature,
-                ))
+            .map(
+              (s) => _ExtractedThermalPoint(
+                spot: 'Sp${s.id}',
+                label: s.label.isNotEmpty ? s.label : 'Sp${s.id}',
+                temperature: s.temperature,
+              ),
+            )
             .toList(),
         extraPoints: extra
-            .map((s) => _ExtractedThermalPoint(
-                  spot: 'Sp${s.id}',
-                  label: s.label.isNotEmpty ? s.label : 'Sp${s.id}',
-                  temperature: s.temperature,
-                ))
+            .map(
+              (s) => _ExtractedThermalPoint(
+                spot: 'Sp${s.id}',
+                label: s.label.isNotEmpty ? s.label : 'Sp${s.id}',
+                temperature: s.temperature,
+              ),
+            )
             .toList(),
       );
     }
@@ -570,7 +656,8 @@ class _ThermalIndicatorScreenState extends State<ThermalIndicatorScreen> {
       direction: 'Niet automatisch uitgelezen',
       minTemp: null,
       maxTemp: null,
-      note: flir?.message ??
+      note:
+          flir?.message ??
           'Geen radiometrische FLIR-data gevonden in dit bestand. '
               'Meetpunten moeten handmatig worden ingevoerd.',
       mappedPoints: const [],
@@ -592,7 +679,8 @@ class _ThermalIndicatorScreenState extends State<ThermalIndicatorScreen> {
     }
   }
 
-  String _fileNameFromPath(String path) => path.split(Platform.pathSeparator).last;
+  String _fileNameFromPath(String path) =>
+      path.split(Platform.pathSeparator).last;
 
   String _formatFileSize(int bytes) {
     if (bytes < 1024) return '$bytes B';
@@ -618,9 +706,9 @@ class _ThermalIndicatorScreenState extends State<ThermalIndicatorScreen> {
 
   void _showMessage(String message) {
     if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message)),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message)));
   }
 
   void _showExportError(String error) {
@@ -656,20 +744,25 @@ class _ThermalIndicatorScreenState extends State<ThermalIndicatorScreen> {
     setState(() {
       _tambCtrl.text = session.ambient.toStringAsFixed(1);
       for (final m in session.measurements) {
-        final (iCtrl, tCtrl, diCtrl, dtCtrl) = switch (m.id) {
-          1 => (_i1Ctrl, _t1Ctrl, _di1Ctrl, _dt1Ctrl),
-          2 => (_i2Ctrl, _t2Ctrl, _di2Ctrl, _dt2Ctrl),
-          3 => (_i3Ctrl, _t3Ctrl, _di3Ctrl, _dt3Ctrl),
-          4 => (_i4Ctrl, _t4Ctrl, _di4Ctrl, _dt4Ctrl),
-          5 => (_i5Ctrl, _t5Ctrl, _di5Ctrl, _dt5Ctrl),
-          6 => (_i6Ctrl, _t6Ctrl, _di6Ctrl, _dt6Ctrl),
-          _ => (null, null, null, null),
+        final tCtrl = switch (m.id) {
+          1 => _t1Ctrl,
+          2 => _t2Ctrl,
+          3 => _t3Ctrl,
+          4 => _t4Ctrl,
+          5 => _t5Ctrl,
+          6 => _t6Ctrl,
+          _ => null,
         };
-        if (iCtrl == null) continue;
-        iCtrl.text = m.current.toStringAsFixed(1);
-        tCtrl!.text = m.temperature.toStringAsFixed(1);
-        diCtrl!.text = m.currentError.toString();
-        dtCtrl!.text = m.temperatureError.toString();
+        if (tCtrl == null) continue;
+        tCtrl.text = m.temperature.toStringAsFixed(1);
+        // Gedeelde reeksstroom: id 1,3,5 → I1; id 2,4,6 → I2
+        if (m.id == 1) {
+          _i1Ctrl.text = m.current.toStringAsFixed(1);
+          _diCtrl.text = m.currentError.toString();
+          _dtCtrl.text = m.temperatureError.toString();
+        } else if (m.id == 2) {
+          _i2Ctrl.text = m.current.toStringAsFixed(1);
+        }
         _setSourceLabel(m.id, m.sourceLabel);
       }
       _results = const [];
@@ -684,7 +777,8 @@ class _ThermalIndicatorScreenState extends State<ThermalIndicatorScreen> {
       return;
     }
 
-    final defaultName = 'Thermische indicator '
+    final defaultName =
+        'Thermische indicator '
         '${_formatTimestamp(DateTime.now())}';
     final nameCtrl = TextEditingController(text: defaultName);
     final noteCtrl = TextEditingController();
@@ -737,15 +831,17 @@ class _ThermalIndicatorScreenState extends State<ThermalIndicatorScreen> {
     final bindings = _measurementBindings();
     final measurements = <ThermalIndicatorMeasurement>[];
     for (final b in bindings) {
-      measurements.add(ThermalIndicatorMeasurement(
-        id: b.id,
-        label: b.label,
-        sourceLabel: b.sourceLabel,
-        current: _parse(b.currentCtrl) ?? 0,
-        temperature: _parse(b.temperatureCtrl) ?? 0,
-        currentError: _parse(b.currentErrorCtrl) ?? 0,
-        temperatureError: _parse(b.temperatureErrorCtrl) ?? 0,
-      ));
+      measurements.add(
+        ThermalIndicatorMeasurement(
+          id: b.id,
+          label: b.label,
+          sourceLabel: b.sourceLabel,
+          current: _parse(b.currentCtrl) ?? 0,
+          temperature: _parse(b.temperatureCtrl) ?? 0,
+          currentError: _parse(b.currentErrorCtrl) ?? 0,
+          temperatureError: _parse(b.temperatureErrorCtrl) ?? 0,
+        ),
+      );
     }
 
     final name = nameCtrl.text.trim().isEmpty
@@ -773,42 +869,71 @@ class _ThermalIndicatorScreenState extends State<ThermalIndicatorScreen> {
 
   void _setSourceLabel(int measurement, String label) {
     switch (measurement) {
-      case 1: _measurement1Source = label; break;
-      case 2: _measurement2Source = label; break;
-      case 3: _measurement3Source = label; break;
-      case 4: _measurement4Source = label; break;
-      case 5: _measurement5Source = label; break;
-      case 6: _measurement6Source = label; break;
+      case 1:
+        _measurement1Source = label;
+        break;
+      case 2:
+        _measurement2Source = label;
+        break;
+      case 3:
+        _measurement3Source = label;
+        break;
+      case 4:
+        _measurement4Source = label;
+        break;
+      case 5:
+        _measurement5Source = label;
+        break;
+      case 6:
+        _measurement6Source = label;
+        break;
     }
   }
 
   void _setTemperatureValue(int measurement, String value) {
     switch (measurement) {
-      case 1: _t1Ctrl.text = value; break;
-      case 2: _t2Ctrl.text = value; break;
-      case 3: _t3Ctrl.text = value; break;
-      case 4: _t4Ctrl.text = value; break;
-      case 5: _t5Ctrl.text = value; break;
-      case 6: _t6Ctrl.text = value; break;
+      case 1:
+        _t1Ctrl.text = value;
+        break;
+      case 2:
+        _t2Ctrl.text = value;
+        break;
+      case 3:
+        _t3Ctrl.text = value;
+        break;
+      case 4:
+        _t4Ctrl.text = value;
+        break;
+      case 5:
+        _t5Ctrl.text = value;
+        break;
+      case 6:
+        _t6Ctrl.text = value;
+        break;
     }
   }
 
-  /// Wist T en I van een niet-toegewezen meting; foutmarges blijven op standaard.
+  /// Wist alleen T van een niet-toegewezen meting (I en onzekerheden zijn gedeeld).
   void _clearMeasurementFields(int measurement) {
-    void reset(TextEditingController tCtrl, TextEditingController iCtrl,
-        TextEditingController diCtrl, TextEditingController dtCtrl) {
-      tCtrl.text = '';
-      iCtrl.text = '';
-      diCtrl.text = '1';
-      dtCtrl.text = '0.5';
-    }
     switch (measurement) {
-      case 1: reset(_t1Ctrl, _i1Ctrl, _di1Ctrl, _dt1Ctrl); break;
-      case 2: reset(_t2Ctrl, _i2Ctrl, _di2Ctrl, _dt2Ctrl); break;
-      case 3: reset(_t3Ctrl, _i3Ctrl, _di3Ctrl, _dt3Ctrl); break;
-      case 4: reset(_t4Ctrl, _i4Ctrl, _di4Ctrl, _dt4Ctrl); break;
-      case 5: reset(_t5Ctrl, _i5Ctrl, _di5Ctrl, _dt5Ctrl); break;
-      case 6: reset(_t6Ctrl, _i6Ctrl, _di6Ctrl, _dt6Ctrl); break;
+      case 1:
+        _t1Ctrl.text = '';
+        break;
+      case 2:
+        _t2Ctrl.text = '';
+        break;
+      case 3:
+        _t3Ctrl.text = '';
+        break;
+      case 4:
+        _t4Ctrl.text = '';
+        break;
+      case 5:
+        _t5Ctrl.text = '';
+        break;
+      case 6:
+        _t6Ctrl.text = '';
+        break;
     }
   }
 
@@ -816,7 +941,8 @@ class _ThermalIndicatorScreenState extends State<ThermalIndicatorScreen> {
     setState(() {
       // Enforce 1:1: verwijder dit punt van een eventuele andere meting
       for (final key in _assignedSpotByMeasurement.keys.toList()) {
-        if (_assignedSpotByMeasurement[key] == point.spot && key != measurement) {
+        if (_assignedSpotByMeasurement[key] == point.spot &&
+            key != measurement) {
           _assignedSpotByMeasurement.remove(key);
           _setSourceLabel(key, 'Handmatige invoer');
         }
@@ -853,74 +979,73 @@ class _ThermalIndicatorScreenState extends State<ThermalIndicatorScreen> {
   }
 
   List<_MeasurementBinding> _measurementBindings() => [
-        _MeasurementBinding(
-          id: 1,
-          label: 'Meting 1',
-          color: AppTheme.chartA,
-          sourceLabel: _measurement1Source,
-          assignedSpot: _assignedSpotByMeasurement[1],
-          temperatureCtrl: _t1Ctrl,
-          currentCtrl: _i1Ctrl,
-          currentErrorCtrl: _di1Ctrl,
-          temperatureErrorCtrl: _dt1Ctrl,
-        ),
-        _MeasurementBinding(
-          id: 2,
-          label: 'Meting 2',
-          color: AppTheme.chartB,
-          sourceLabel: _measurement2Source,
-          assignedSpot: _assignedSpotByMeasurement[2],
-          temperatureCtrl: _t2Ctrl,
-          currentCtrl: _i2Ctrl,
-          currentErrorCtrl: _di2Ctrl,
-          temperatureErrorCtrl: _dt2Ctrl,
-        ),
-        _MeasurementBinding(
-          id: 3,
-          label: 'Meting 3',
-          color: AppTheme.statusWarning,
-          sourceLabel: _measurement3Source,
-          assignedSpot: _assignedSpotByMeasurement[3],
-          temperatureCtrl: _t3Ctrl,
-          currentCtrl: _i3Ctrl,
-          currentErrorCtrl: _di3Ctrl,
-          temperatureErrorCtrl: _dt3Ctrl,
-        ),
-        _MeasurementBinding(
-          id: 4,
-          label: 'Meting 4',
-          color: AppTheme.statusFault,
-          sourceLabel: _measurement4Source,
-          assignedSpot: _assignedSpotByMeasurement[4],
-          temperatureCtrl: _t4Ctrl,
-          currentCtrl: _i4Ctrl,
-          currentErrorCtrl: _di4Ctrl,
-          temperatureErrorCtrl: _dt4Ctrl,
-        ),
-        _MeasurementBinding(
-          id: 5,
-          label: 'Meting 5',
-          color: const Color(0xFF6A1B9A),
-          sourceLabel: _measurement5Source,
-          assignedSpot: _assignedSpotByMeasurement[5],
-          temperatureCtrl: _t5Ctrl,
-          currentCtrl: _i5Ctrl,
-          currentErrorCtrl: _di5Ctrl,
-          temperatureErrorCtrl: _dt5Ctrl,
-        ),
-        _MeasurementBinding(
-          id: 6,
-          label: 'Meting 6',
-          color: const Color(0xFF00838F),
-          sourceLabel: _measurement6Source,
-          assignedSpot: _assignedSpotByMeasurement[6],
-          temperatureCtrl: _t6Ctrl,
-          currentCtrl: _i6Ctrl,
-          currentErrorCtrl: _di6Ctrl,
-          temperatureErrorCtrl: _dt6Ctrl,
-        ),
-      ];
-
+    _MeasurementBinding(
+      id: 1,
+      label: 'Meting 1',
+      color: AppTheme.chartA,
+      sourceLabel: _measurement1Source,
+      assignedSpot: _assignedSpotByMeasurement[1],
+      temperatureCtrl: _t1Ctrl,
+      currentCtrl: _i1Ctrl,
+      currentErrorCtrl: _diCtrl,
+      temperatureErrorCtrl: _dtCtrl,
+    ),
+    _MeasurementBinding(
+      id: 2,
+      label: 'Meting 2',
+      color: AppTheme.chartB,
+      sourceLabel: _measurement2Source,
+      assignedSpot: _assignedSpotByMeasurement[2],
+      temperatureCtrl: _t2Ctrl,
+      currentCtrl: _i2Ctrl,
+      currentErrorCtrl: _diCtrl,
+      temperatureErrorCtrl: _dtCtrl,
+    ),
+    _MeasurementBinding(
+      id: 3,
+      label: 'Meting 3',
+      color: AppTheme.statusWarning,
+      sourceLabel: _measurement3Source,
+      assignedSpot: _assignedSpotByMeasurement[3],
+      temperatureCtrl: _t3Ctrl,
+      currentCtrl: _i1Ctrl,
+      currentErrorCtrl: _diCtrl,
+      temperatureErrorCtrl: _dtCtrl,
+    ),
+    _MeasurementBinding(
+      id: 4,
+      label: 'Meting 4',
+      color: AppTheme.statusFault,
+      sourceLabel: _measurement4Source,
+      assignedSpot: _assignedSpotByMeasurement[4],
+      temperatureCtrl: _t4Ctrl,
+      currentCtrl: _i2Ctrl,
+      currentErrorCtrl: _diCtrl,
+      temperatureErrorCtrl: _dtCtrl,
+    ),
+    _MeasurementBinding(
+      id: 5,
+      label: 'Meting 5',
+      color: const Color(0xFF6A1B9A),
+      sourceLabel: _measurement5Source,
+      assignedSpot: _assignedSpotByMeasurement[5],
+      temperatureCtrl: _t5Ctrl,
+      currentCtrl: _i1Ctrl,
+      currentErrorCtrl: _diCtrl,
+      temperatureErrorCtrl: _dtCtrl,
+    ),
+    _MeasurementBinding(
+      id: 6,
+      label: 'Meting 6',
+      color: const Color(0xFF00838F),
+      sourceLabel: _measurement6Source,
+      assignedSpot: _assignedSpotByMeasurement[6],
+      temperatureCtrl: _t6Ctrl,
+      currentCtrl: _i2Ctrl,
+      currentErrorCtrl: _diCtrl,
+      temperatureErrorCtrl: _dtCtrl,
+    ),
+  ];
 
   // ── Build ─────────────────────────────────────────────────────────────────
 
@@ -929,6 +1054,13 @@ class _ThermalIndicatorScreenState extends State<ThermalIndicatorScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Thermische indicator K'),
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(44),
+          child: AnalysisTopNav(
+            current: AnalysisTopNavScreen.thermal,
+            onSelected: _openTopNavScreen,
+          ),
+        ),
         actions: [
           IconButton(
             tooltip: 'Sessie opslaan',
@@ -1014,11 +1146,7 @@ class _ThermalIndicatorScreenState extends State<ThermalIndicatorScreen> {
               }
 
               return Column(
-                children: [
-                  imageCard,
-                  const SizedBox(height: 12),
-                  pointsPanel,
-                ],
+                children: [imageCard, const SizedBox(height: 12), pointsPanel],
               );
             },
           ),
@@ -1037,24 +1165,107 @@ class _ThermalIndicatorScreenState extends State<ThermalIndicatorScreen> {
           _FlirDataCard(data: _flirData),
           const SizedBox(height: 12),
 
-          // Gedeelde omgevingstemperatuur
+          // Gedeelde parameters: T_amb, n, I1, I2, δI, δT
           Card(
             child: Padding(
               padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
-              child: Row(
+              child: Wrap(
+                spacing: 20,
+                runSpacing: 10,
+                crossAxisAlignment: WrapCrossAlignment.center,
                 children: [
-                  const Icon(Icons.thermostat_outlined,
-                      size: 20, color: AppTheme.primary),
-                  const SizedBox(width: 10),
-                  const Text('Omgevingstemperatuur (T_amb):',
-                      style: TextStyle(fontSize: 13)),
-                  const SizedBox(width: 12),
-                  SizedBox(
-                    width: 80,
-                    child: _NumberField(
-                      controller: _tambCtrl,
-                      label: '°C',
-                    ),
+                  // Omgevingstemperatuur
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(
+                        Icons.thermostat_outlined,
+                        size: 18,
+                        color: AppTheme.primary,
+                      ),
+                      const SizedBox(width: 6),
+                      const Text('T_amb:', style: TextStyle(fontSize: 13)),
+                      const SizedBox(width: 6),
+                      SizedBox(
+                        width: 76,
+                        child: _NumberField(controller: _tambCtrl, label: '°C'),
+                      ),
+                    ],
+                  ),
+                  // Exponent n
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Text('n:', style: TextStyle(fontSize: 13)),
+                      const SizedBox(width: 6),
+                      SizedBox(
+                        width: 64,
+                        child: TextField(
+                          controller: _nCtrl,
+                          keyboardType: const TextInputType.numberWithOptions(
+                            decimal: true,
+                          ),
+                          textAlign: TextAlign.center,
+                          decoration: const InputDecoration(
+                            isDense: true,
+                            border: OutlineInputBorder(),
+                            contentPadding: EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 8,
+                            ),
+                            hintText: '2',
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  // I1 (meting 1, 3, 5)
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Text('I₁ (1,3,5):', style: TextStyle(fontSize: 13)),
+                      const SizedBox(width: 6),
+                      SizedBox(
+                        width: 76,
+                        child: _NumberField(controller: _i1Ctrl, label: 'A'),
+                      ),
+                    ],
+                  ),
+                  // I2 (meting 2, 4, 6)
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Text('I₂ (2,4,6):', style: TextStyle(fontSize: 13)),
+                      const SizedBox(width: 6),
+                      SizedBox(
+                        width: 76,
+                        child: _NumberField(controller: _i2Ctrl, label: 'A'),
+                      ),
+                    ],
+                  ),
+                  // Gedeelde δI
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Text('δI:', style: TextStyle(fontSize: 13)),
+                      const SizedBox(width: 6),
+                      SizedBox(
+                        width: 64,
+                        child: _NumberField(controller: _diCtrl, label: 'A'),
+                      ),
+                    ],
+                  ),
+                  // Gedeelde δT
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Text('δT:', style: TextStyle(fontSize: 13)),
+                      const SizedBox(width: 6),
+                      SizedBox(
+                        width: 64,
+                        child: _NumberField(controller: _dtCtrl, label: '°C'),
+                      ),
+                    ],
                   ),
                 ],
               ),
@@ -1074,8 +1285,6 @@ class _ThermalIndicatorScreenState extends State<ThermalIndicatorScreen> {
                       color: binding.color,
                       iCtrl: binding.currentCtrl,
                       tCtrl: binding.temperatureCtrl,
-                      diCtrl: binding.currentErrorCtrl,
-                      dtCtrl: binding.temperatureErrorCtrl,
                       tambCtrl: _tambCtrl,
                     ),
                   )
@@ -1109,34 +1318,6 @@ class _ThermalIndicatorScreenState extends State<ThermalIndicatorScreen> {
           ),
 
           const SizedBox(height: 12),
-
-          // Exponent n voor ΔT%-formule
-          Row(
-            children: [
-              const Expanded(
-                child: Text(
-                  'Exponent n  (ΔT% formule)',
-                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500),
-                ),
-              ),
-              SizedBox(
-                width: 72,
-                child: TextField(
-                  controller: _nCtrl,
-                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                  textAlign: TextAlign.center,
-                  decoration: const InputDecoration(
-                    isDense: true,
-                    border: OutlineInputBorder(),
-                    contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-                    hintText: '2',
-                  ),
-                ),
-              ),
-            ],
-          ),
-
-          const SizedBox(height: 10),
 
           // Bereken knop
           FilledButton.icon(
@@ -1189,21 +1370,37 @@ class _ThermalIndicatorScreenState extends State<ThermalIndicatorScreen> {
           // NPR 8040-1 beoordeling (methoden 1, 2, 3)
           OutlinedButton.icon(
             onPressed: () {
-              final bindings = _measurementBindings();
-              final measurements = bindings.map((b) => NprMeasurementData(
-                    label: b.label,
-                    color: b.color,
-                    temperature: double.tryParse(b.temperatureCtrl.text),
-                  )).toList();
-              Navigator.of(context).push(MaterialPageRoute(
-                builder: (_) => NprAssessmentScreen(
-                  measurements: measurements,
-                  tamb: double.tryParse(_tambCtrl.text),
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) => NprAssessmentScreen(
+                    measurements: _nprMeasurements(),
+                    tamb: double.tryParse(_tambCtrl.text),
+                  ),
                 ),
-              ));
+              );
             },
             icon: const Icon(Icons.rule_rounded),
             label: const Text('NPR 8040-1 — methoden 1, 2 en 3'),
+            style: OutlinedButton.styleFrom(
+              minimumSize: const Size.fromHeight(48),
+            ),
+          ),
+          const SizedBox(height: 8),
+
+          // Regressieanalyse
+          OutlinedButton.icon(
+            onPressed: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) => RegressionAnalysisScreen(
+                    measurements: _regressionMeasurements(),
+                    tamb: double.tryParse(_tambCtrl.text),
+                  ),
+                ),
+              );
+            },
+            icon: const Icon(Icons.show_chart_rounded),
+            label: const Text('Regressieanalyse — stroomcorrectie & diagnose'),
             style: OutlinedButton.styleFrom(
               minimumSize: const Size.fromHeight(48),
             ),
@@ -1224,10 +1421,8 @@ class _MeasurementCard extends StatefulWidget {
   final String label;
   final String sourceLabel;
   final Color color;
-  final TextEditingController iCtrl;
+  final TextEditingController iCtrl; // alleen voor live-K preview
   final TextEditingController tCtrl;
-  final TextEditingController diCtrl;
-  final TextEditingController dtCtrl;
   final TextEditingController tambCtrl;
 
   const _MeasurementCard({
@@ -1236,8 +1431,6 @@ class _MeasurementCard extends StatefulWidget {
     required this.color,
     required this.iCtrl,
     required this.tCtrl,
-    required this.diCtrl,
-    required this.dtCtrl,
     required this.tambCtrl,
   });
 
@@ -1277,15 +1470,19 @@ class _MeasurementCardState extends State<_MeasurementCard> {
                   child: Text(
                     widget.label.split(' ').last,
                     style: TextStyle(
-                        color: widget.color,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 11),
+                      color: widget.color,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 11,
+                    ),
                   ),
                 ),
                 const SizedBox(width: 8),
-                Text(widget.label,
-                    style: theme.textTheme.titleSmall
-                        ?.copyWith(fontWeight: FontWeight.bold)),
+                Text(
+                  widget.label,
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
               ],
             ),
             const SizedBox(height: 4),
@@ -1298,38 +1495,24 @@ class _MeasurementCardState extends State<_MeasurementCard> {
             ),
             const SizedBox(height: 10),
             _NumberField(
-              controller: widget.iCtrl,
-              label: 'I (A)',
-              onChanged: (_) => setState(() {}),
-            ),
-            const SizedBox(height: 6),
-            _NumberField(
               controller: widget.tCtrl,
               label: 'T (°C)',
               onChanged: (_) => setState(() {}),
             ),
-            const Divider(height: 16),
-            Text('Meetonzekerheid',
-                style: theme.textTheme.labelSmall
-                    ?.copyWith(color: Colors.grey.shade600)),
-            const SizedBox(height: 6),
-            _NumberField(controller: widget.diCtrl, label: 'dI (A)'),
-            const SizedBox(height: 6),
-            _NumberField(controller: widget.dtCtrl, label: 'dT (°C)'),
             if (k != null) ...[
               const SizedBox(height: 10),
               Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
                 decoration: BoxDecoration(
                   color: widget.color.withValues(alpha: 0.08),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Row(
                   children: [
-                    Text('K = ',
-                        style: TextStyle(
-                            fontSize: 12, color: widget.color)),
+                    Text(
+                      'K = ',
+                      style: TextStyle(fontSize: 12, color: widget.color),
+                    ),
                     Text(
                       k.toStringAsFixed(3),
                       style: TextStyle(
@@ -1339,8 +1522,10 @@ class _MeasurementCardState extends State<_MeasurementCard> {
                         fontFamily: 'monospace',
                       ),
                     ),
-                    Text(' °C/A²',
-                        style: TextStyle(fontSize: 11, color: widget.color)),
+                    Text(
+                      ' °C/A²',
+                      style: TextStyle(fontSize: 11, color: widget.color),
+                    ),
                   ],
                 ),
               ),
@@ -1370,25 +1555,25 @@ class _ResultCard extends StatelessWidget {
 
     final (bgColor, borderColor, icon) = switch (result.snrLevel) {
       SnrLevel.significant => (
-          AppTheme.statusFault.withValues(alpha: 0.08),
-          AppTheme.statusFault,
-          Icons.warning_amber_rounded,
-        ),
+        AppTheme.statusFault.withValues(alpha: 0.08),
+        AppTheme.statusFault,
+        Icons.warning_amber_rounded,
+      ),
       SnrLevel.uncertain => (
-          AppTheme.statusWarning.withValues(alpha: 0.08),
-          AppTheme.statusWarning,
-          Icons.help_outline_rounded,
-        ),
+        AppTheme.statusWarning.withValues(alpha: 0.08),
+        AppTheme.statusWarning,
+        Icons.help_outline_rounded,
+      ),
       SnrLevel.notSignificant => (
-          AppTheme.statusOk.withValues(alpha: 0.08),
-          AppTheme.statusOk,
-          Icons.check_circle_outline_rounded,
-        ),
+        AppTheme.statusOk.withValues(alpha: 0.08),
+        AppTheme.statusOk,
+        Icons.check_circle_outline_rounded,
+      ),
       SnrLevel.invalid => (
-          Colors.grey.withValues(alpha: 0.08),
-          Colors.grey,
-          Icons.error_outline_rounded,
-        ),
+        Colors.grey.withValues(alpha: 0.08),
+        Colors.grey,
+        Icons.error_outline_rounded,
+      ),
     };
 
     return Card(
@@ -1406,9 +1591,12 @@ class _ResultCard extends StatelessWidget {
               children: [
                 Icon(icon, color: borderColor, size: 22),
                 const SizedBox(width: 8),
-                Text(title,
-                    style: theme.textTheme.titleSmall
-                        ?.copyWith(fontWeight: FontWeight.bold)),
+                Text(
+                  title,
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
               ],
             ),
             const SizedBox(height: 12),
@@ -1457,18 +1645,22 @@ class _ResultCard extends StatelessWidget {
               const Divider(height: 20),
               Text(
                 'ΔT gecorrigeerd voor stroom',
-                style: theme.textTheme.titleSmall
-                    ?.copyWith(fontWeight: FontWeight.bold, fontSize: 13),
+                style: theme.textTheme.titleSmall?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 13,
+                ),
               ),
               const SizedBox(height: 8),
               _CorrRow(
-                formula: 'ΔT% = [ΔT₁ − (I₁/I₂)ⁿ × ΔT₂] / ΔT₁ × 100%  (n=${deltaTCorr!.n.toStringAsFixed(1)})',
+                formula:
+                    'ΔT% = [ΔT₁ − (I₁/I₂)ⁿ × ΔT₂] / ΔT₁ × 100%  (n=${deltaTCorr!.n.toStringAsFixed(1)})',
                 value: deltaTCorr!.dtPercent,
                 unit: '%',
                 highlight: true,
               ),
               _CorrRow(
-                formula: 'ΔT  = ΔT₁ − (I₁/I₂)ⁿ × ΔT₂  (n=${deltaTCorr!.n.toStringAsFixed(1)})',
+                formula:
+                    'ΔT  = ΔT₁ − (I₁/I₂)ⁿ × ΔT₂  (n=${deltaTCorr!.n.toStringAsFixed(1)})',
                 value: deltaTCorr!.dtAbsolute,
                 unit: '°C',
                 highlight: true,
@@ -1535,12 +1727,14 @@ class _ResultRow extends StatelessWidget {
       child: Row(
         children: [
           Expanded(
-            child: Text(label,
-                style: TextStyle(
-                    fontSize: 13,
-                    color: color,
-                    fontWeight:
-                        color != null ? FontWeight.w600 : FontWeight.normal)),
+            child: Text(
+              label,
+              style: TextStyle(
+                fontSize: 13,
+                color: color,
+                fontWeight: color != null ? FontWeight.w600 : FontWeight.normal,
+              ),
+            ),
           ),
           Text(
             value,
@@ -1552,13 +1746,18 @@ class _ResultRow extends StatelessWidget {
             ),
           ),
           if (sub != null)
-            Text(' $sub',
-                style: TextStyle(
-                    fontSize: 11,
-                    color: Colors.grey.shade600,
-                    fontFamily: 'monospace')),
-          Text('  $unit',
-              style: TextStyle(fontSize: 11, color: Colors.grey.shade500)),
+            Text(
+              ' $sub',
+              style: TextStyle(
+                fontSize: 11,
+                color: Colors.grey.shade600,
+                fontFamily: 'monospace',
+              ),
+            ),
+          Text(
+            '  $unit',
+            style: TextStyle(fontSize: 11, color: Colors.grey.shade500),
+          ),
         ],
       ),
     );
@@ -1575,15 +1774,18 @@ class _SnrRow extends StatelessWidget {
     final (label, color) = switch (level) {
       SnrLevel.significant => ('Significant (SNR > 3)', AppTheme.statusFault),
       SnrLevel.uncertain => ('Onzeker (1 ≤ SNR ≤ 3)', AppTheme.statusWarning),
-      SnrLevel.notSignificant => ('Niet significant (SNR < 1)', AppTheme.statusOk),
+      SnrLevel.notSignificant => (
+        'Geen aantoonbare afwijking (SNR < 1)',
+        AppTheme.statusOk,
+      ),
       SnrLevel.invalid => ('Ongeldig', Colors.grey),
     };
 
     return Row(
       children: [
         const Expanded(
-            child: Text('SNR  =  |ΔK| / d(ΔK)',
-                style: TextStyle(fontSize: 13))),
+          child: Text('SNR  =  |ΔK| / d(ΔK)', style: TextStyle(fontSize: 13)),
+        ),
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
           decoration: BoxDecoration(
@@ -1594,7 +1796,10 @@ class _SnrRow extends StatelessWidget {
           child: Text(
             '${snr.toStringAsFixed(2)}  —  $label',
             style: TextStyle(
-                fontSize: 12, fontWeight: FontWeight.bold, color: color),
+              fontSize: 12,
+              fontWeight: FontWeight.bold,
+              color: color,
+            ),
           ),
         ),
       ],
@@ -1622,13 +1827,13 @@ class _CorrRow extends StatelessWidget {
     final color = value.isNaN
         ? Colors.grey
         : value.abs() < (exponential ? 1e-4 : 1.0)
-            ? AppTheme.statusOk
-            : AppTheme.statusFault;
+        ? AppTheme.statusOk
+        : AppTheme.statusFault;
     final display = value.isNaN
         ? '—'
         : exponential
-            ? value.toStringAsExponential(3)
-            : value.toStringAsFixed(2);
+        ? value.toStringAsExponential(3)
+        : value.toStringAsFixed(2);
 
     final row = Padding(
       padding: const EdgeInsets.symmetric(vertical: 2),
@@ -1677,23 +1882,21 @@ class _KnCompareRow extends StatelessWidget {
   final double kBn;
   final double n;
 
-  const _KnCompareRow({
-    required this.kAn,
-    required this.kBn,
-    required this.n,
-  });
+  const _KnCompareRow({required this.kAn, required this.kBn, required this.n});
 
-  String _fmt(double v) =>
-      v.isNaN ? '—' : v.toStringAsFixed(3);
+  String _fmt(double v) => v.isNaN ? '—' : v.toStringAsFixed(3);
 
   @override
   Widget build(BuildContext context) {
-    final equal = !kAn.isNaN && !kBn.isNaN && (kAn - kBn).abs() / (kAn.abs() + 1e-20) < 0.05;
+    final equal =
+        !kAn.isNaN &&
+        !kBn.isNaN &&
+        (kAn - kBn).abs() / (kAn.abs() + 1e-20) < 0.05;
     final color = kAn.isNaN || kBn.isNaN
         ? Colors.grey
         : equal
-            ? AppTheme.statusOk
-            : AppTheme.statusFault;
+        ? AppTheme.statusOk
+        : AppTheme.statusFault;
     final nStr = n.toStringAsFixed(1);
 
     return Container(
@@ -1748,32 +1951,40 @@ class _ExplanationCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Formules en beslislogica',
-                style: theme.textTheme.titleSmall
-                    ?.copyWith(fontWeight: FontWeight.bold)),
+            Text(
+              'Formules en beslislogica',
+              style: theme.textTheme.titleSmall?.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
+            ),
             const SizedBox(height: 10),
-            _FormulaRow('K = ΔT / I²',
-                'Thermische weerstandsindicator  [°C/A²]'),
-            _FormulaRow('dK = K × √((dΔT/ΔT)² + (2·dI/I)²)',
-                'Foutpropagatie eerste orde'),
+            _FormulaRow(
+              'K = ΔT / I²',
+              'Thermische weerstandsindicator  [°C/A²]',
+            ),
+            _FormulaRow(
+              'dK = K × √((dΔT/ΔT)² + (2·dI/I)²)',
+              'Foutpropagatie eerste orde',
+            ),
             _FormulaRow('ΔK = K₁ − K₂', 'Verschil tussen twee metingen'),
-            _FormulaRow('d(ΔK) = √(dK₁² + dK₂²)',
-                'Gecombineerde onzekerheid'),
-            _FormulaRow('SNR = |ΔK| / d(ΔK)',
-                'Signaal-ruisverhouding'),
+            _FormulaRow('d(ΔK) = √(dK₁² + dK₂²)', 'Gecombineerde onzekerheid'),
+            _FormulaRow('SNR = |ΔK| / d(ΔK)', 'Signaal-ruisverhouding'),
             const Divider(height: 16),
             _DecisionRow(
-                color: AppTheme.statusFault,
-                label: 'SNR > 3',
-                text: 'Significante afwijking — mogelijke slechte verbinding'),
+              color: AppTheme.statusFault,
+              label: 'SNR > 3',
+              text: 'Significante afwijking — mogelijke slechte verbinding',
+            ),
             _DecisionRow(
-                color: AppTheme.statusWarning,
-                label: '1 ≤ SNR ≤ 3',
-                text: 'Onzeker — verhoog stroom of verbeter meetnauwkeurigheid'),
+              color: AppTheme.statusWarning,
+              label: '1 ≤ SNR ≤ 3',
+              text: 'Onzeker — verhoog stroom of verbeter meetnauwkeurigheid',
+            ),
             _DecisionRow(
-                color: AppTheme.statusOk,
-                label: 'SNR < 1',
-                text: 'Niet betrouwbaar — verschil valt binnen meetruis'),
+              color: AppTheme.statusOk,
+              label: 'SNR < 1',
+              text: 'Niet betrouwbaar — verschil valt binnen meetruis',
+            ),
           ],
         ),
       ),
@@ -1793,14 +2004,19 @@ class _FormulaRow extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(formula,
-              style: const TextStyle(
-                  fontFamily: 'monospace',
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
-                  color: AppTheme.primaryDark)),
-          Text(description,
-              style: TextStyle(fontSize: 12, color: Colors.grey.shade700)),
+          Text(
+            formula,
+            style: const TextStyle(
+              fontFamily: 'monospace',
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              color: AppTheme.primaryDark,
+            ),
+          ),
+          Text(
+            description,
+            style: TextStyle(fontSize: 12, color: Colors.grey.shade700),
+          ),
         ],
       ),
     );
@@ -1811,8 +2027,11 @@ class _DecisionRow extends StatelessWidget {
   final Color color;
   final String label;
   final String text;
-  const _DecisionRow(
-      {required this.color, required this.label, required this.text});
+  const _DecisionRow({
+    required this.color,
+    required this.label,
+    required this.text,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -1828,18 +2047,24 @@ class _DecisionRow extends StatelessWidget {
               borderRadius: BorderRadius.circular(6),
               border: Border.all(color: color),
             ),
-            child: Text(label,
-                style: TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.bold,
-                    color: color,
-                    fontFamily: 'monospace')),
+            child: Text(
+              label,
+              style: TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.bold,
+                color: color,
+                fontFamily: 'monospace',
+              ),
+            ),
           ),
           const SizedBox(width: 8),
           Expanded(
-              child: Text(text,
-                  style: const TextStyle(fontSize: 12),
-                  overflow: TextOverflow.visible)),
+            child: Text(
+              text,
+              style: const TextStyle(fontSize: 12),
+              overflow: TextOverflow.visible,
+            ),
+          ),
         ],
       ),
     );
@@ -1864,12 +2089,16 @@ class _NumberField extends StatelessWidget {
     return TextField(
       controller: controller,
       keyboardType: const TextInputType.numberWithOptions(
-          decimal: true, signed: true),
+        decimal: true,
+        signed: true,
+      ),
       decoration: InputDecoration(
         labelText: label,
         isDense: true,
-        contentPadding:
-            const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 10,
+          vertical: 10,
+        ),
         border: const OutlineInputBorder(),
       ),
       style: const TextStyle(fontSize: 13),
@@ -1922,11 +2151,10 @@ class _ImagePreviewCardState extends State<_ImagePreviewCard> {
                 Expanded(
                   child: Text(
                     'FLIR-opname in containerveld',
-                    style: Theme.of(context)
-                        .textTheme
-                        .titleSmall
-                        ?.copyWith(fontWeight: FontWeight.bold),
+                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.bold,
                     ),
+                  ),
                 ),
                 if (widget.onEdit != null)
                   Padding(
@@ -1947,8 +2175,11 @@ class _ImagePreviewCardState extends State<_ImagePreviewCard> {
             const SizedBox(height: 6),
             Row(
               children: [
-                const Icon(Icons.photo_size_select_small,
-                    size: 16, color: Colors.grey),
+                const Icon(
+                  Icons.photo_size_select_small,
+                  size: 16,
+                  color: Colors.grey,
+                ),
                 const SizedBox(width: 6),
                 const Text('Grootte:', style: TextStyle(fontSize: 12)),
                 Expanded(
@@ -1961,89 +2192,90 @@ class _ImagePreviewCardState extends State<_ImagePreviewCard> {
                     onChanged: (v) => setState(() => _containerScale = v),
                   ),
                 ),
-                Text('${(_containerScale * 100).round()}%',
-                    style: const TextStyle(fontSize: 12, fontFamily: 'monospace')),
+                Text(
+                  '${(_containerScale * 100).round()}%',
+                  style: const TextStyle(fontSize: 12, fontFamily: 'monospace'),
+                ),
               ],
             ),
             FractionallySizedBox(
               widthFactor: _containerScale,
               alignment: Alignment.centerLeft,
               child: DropTarget(
-              onDragDone: (detail) => widget.onDropPaths(
-                detail.files
-                    .map((file) => file.path)
-                    .where((path) => path.isNotEmpty)
-                    .toList(),
-              ),
-              onDragEntered: (_) => widget.onDragEntered(),
-              onDragExited: (_) => widget.onDragExited(),
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 180),
-                width: double.infinity,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(
-                    color: widget.isDragActive
-                        ? AppTheme.primary
-                        : AppTheme.primary.withValues(alpha: 0.18),
-                    width: widget.isDragActive ? 2 : 1,
-                  ),
-                  color: widget.isDragActive
-                      ? AppTheme.primary.withValues(alpha: 0.08)
-                      : const Color(0xFFF5F7FB),
+                onDragDone: (detail) => widget.onDropPaths(
+                  detail.files
+                      .map((file) => file.path)
+                      .where((path) => path.isNotEmpty)
+                      .toList(),
                 ),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(16),
-                  child: AspectRatio(
-                    aspectRatio: 4 / 3,
-                    child: Stack(
-                      fit: StackFit.expand,
-                      children: [
-                        if (widget.imageFile != null)
-                          Image.file(
-                            widget.imageFile!,
-                            fit: BoxFit.cover,
-                            errorBuilder: (context, error, stackTrace) =>
-                                const _ImagePlaceholder(),
-                          )
-                        else
-                          const _ImagePlaceholder(),
-                        Positioned(
-                          left: 16,
-                          right: 16,
-                          bottom: 16,
-                          child: _UploadOverlay(isDragActive: widget.isDragActive),
-                        ),
-                      ],
+                onDragEntered: (_) => widget.onDragEntered(),
+                onDragExited: (_) => widget.onDragExited(),
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 180),
+                  width: double.infinity,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(
+                      color: widget.isDragActive
+                          ? AppTheme.primary
+                          : AppTheme.primary.withValues(alpha: 0.18),
+                      width: widget.isDragActive ? 2 : 1,
+                    ),
+                    color: widget.isDragActive
+                        ? AppTheme.primary.withValues(alpha: 0.08)
+                        : const Color(0xFFF5F7FB),
+                  ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(16),
+                    child: AspectRatio(
+                      aspectRatio: 4 / 3,
+                      child: Stack(
+                        fit: StackFit.expand,
+                        children: [
+                          if (widget.imageFile != null)
+                            Image.file(
+                              widget.imageFile!,
+                              fit: BoxFit.cover,
+                              errorBuilder: (context, error, stackTrace) =>
+                                  const _ImagePlaceholder(),
+                            )
+                          else
+                            const _ImagePlaceholder(),
+                          Positioned(
+                            left: 16,
+                            right: 16,
+                            bottom: 16,
+                            child: _UploadOverlay(
+                              isDragActive: widget.isDragActive,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ),
               ),
             ),
-            ),
             const SizedBox(height: 10),
             Text(
               widget.data.fileName,
-              style: Theme.of(context)
-                  .textTheme
-                  .bodyMedium
-                  ?.copyWith(fontWeight: FontWeight.w600),
+              style: Theme.of(
+                context,
+              ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
             ),
             const SizedBox(height: 4),
             Text(
               'Pad: ${widget.data.imagePath}',
-              style: Theme.of(context)
-                  .textTheme
-                  .bodySmall
-                  ?.copyWith(color: Colors.grey.shade700),
+              style: Theme.of(
+                context,
+              ).textTheme.bodySmall?.copyWith(color: Colors.grey.shade700),
             ),
             const SizedBox(height: 4),
             Text(
               'Bestandsgrootte: ${widget.data.fileSize}',
-              style: Theme.of(context)
-                  .textTheme
-                  .bodySmall
-                  ?.copyWith(color: Colors.grey.shade700),
+              style: Theme.of(
+                context,
+              ).textTheme.bodySmall?.copyWith(color: Colors.grey.shade700),
             ),
           ],
         ),
@@ -2062,10 +2294,9 @@ class _ImagePlaceholder extends StatelessWidget {
       color: const Color(0xFFF0F3F9),
       child: Text(
         'Nog geen afbeelding geladen',
-        style: Theme.of(context)
-            .textTheme
-            .bodyMedium
-            ?.copyWith(color: Colors.grey.shade700),
+        style: Theme.of(
+          context,
+        ).textTheme.bodyMedium?.copyWith(color: Colors.grey.shade700),
       ),
     );
   }
@@ -2087,7 +2318,9 @@ class _UploadOverlay extends StatelessWidget {
       child: Row(
         children: [
           Icon(
-            isDragActive ? Icons.file_download_done : Icons.file_upload_outlined,
+            isDragActive
+                ? Icons.file_download_done
+                : Icons.file_upload_outlined,
             color: Colors.white,
           ),
           const SizedBox(width: 10),
@@ -2135,10 +2368,9 @@ class _ImageLibraryCard extends StatelessWidget {
           children: [
             Text(
               'Recente en vaste afbeeldingen',
-              style: Theme.of(context)
-                  .textTheme
-                  .titleSmall
-                  ?.copyWith(fontWeight: FontWeight.bold),
+              style: Theme.of(
+                context,
+              ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 12),
             Wrap(
@@ -2159,10 +2391,9 @@ class _ImageLibraryCard extends StatelessWidget {
             const SizedBox(height: 16),
             Text(
               'Recent geopend',
-              style: Theme.of(context)
-                  .textTheme
-                  .titleSmall
-                  ?.copyWith(fontWeight: FontWeight.bold),
+              style: Theme.of(
+                context,
+              ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 10),
             if (recentImages.isEmpty)
@@ -2175,7 +2406,8 @@ class _ImageLibraryCard extends StatelessWidget {
                 (entry) => _RecentImageRow(
                   title: entry.fileName,
                   subtitle: entry.subtitle,
-                  meta: '${entry.path} • ${formatRelativeTime(entry.lastOpened)}',
+                  meta:
+                      '${entry.path} • ${formatRelativeTime(entry.lastOpened)}',
                   onOpen: () => onOpenRecent(entry),
                   onRemove: () => onRemoveRecent(entry),
                 ),
@@ -2219,24 +2451,19 @@ class _LibraryTile extends StatelessWidget {
           const SizedBox(height: 10),
           Text(
             title,
-            style: Theme.of(context)
-                .textTheme
-                .bodyMedium
-                ?.copyWith(fontWeight: FontWeight.w700),
+            style: Theme.of(
+              context,
+            ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w700),
           ),
           const SizedBox(height: 4),
           Text(
             subtitle,
-            style: Theme.of(context)
-                .textTheme
-                .bodySmall
-                ?.copyWith(color: Colors.grey.shade700),
+            style: Theme.of(
+              context,
+            ).textTheme.bodySmall?.copyWith(color: Colors.grey.shade700),
           ),
           const SizedBox(height: 12),
-          OutlinedButton(
-            onPressed: onPressed,
-            child: Text(actionLabel),
-          ),
+          OutlinedButton(onPressed: onPressed, child: Text(actionLabel)),
         ],
       ),
     );
@@ -2278,7 +2505,10 @@ class _RecentImageRow extends StatelessWidget {
             Expanded(
               child: Text(
                 title,
-                style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+                style: const TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                ),
                 overflow: TextOverflow.ellipsis,
               ),
             ),
@@ -2322,12 +2552,18 @@ class _FlirDataCard extends StatelessWidget {
       ('Resolutie', data.resolution),
       ('Palet', data.palette),
       ('Richting', data.direction),
-      ('Min. schaal', data.minTemp != null
-          ? '${data.minTemp!.toStringAsFixed(1)} °C'
-          : 'Niet beschikbaar'),
-      ('Max. schaal', data.maxTemp != null
-          ? '${data.maxTemp!.toStringAsFixed(1)} °C'
-          : 'Niet beschikbaar'),
+      (
+        'Min. schaal',
+        data.minTemp != null
+            ? '${data.minTemp!.toStringAsFixed(1)} °C'
+            : 'Niet beschikbaar',
+      ),
+      (
+        'Max. schaal',
+        data.maxTemp != null
+            ? '${data.maxTemp!.toStringAsFixed(1)} °C'
+            : 'Niet beschikbaar',
+      ),
     ];
 
     return Card(
@@ -2338,10 +2574,9 @@ class _FlirDataCard extends StatelessWidget {
           children: [
             Text(
               'Opgehaalde FLIR-data',
-              style: Theme.of(context)
-                  .textTheme
-                  .titleSmall
-                  ?.copyWith(fontWeight: FontWeight.bold),
+              style: Theme.of(
+                context,
+              ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 6),
             Text(
@@ -2370,9 +2605,8 @@ class _FlirDataCard extends StatelessWidget {
 class _PointAssignmentPanel extends StatelessWidget {
   final _ExtractedFlirData data;
   final void Function(_ExtractedThermalPoint point, int? measurement)
-      onAssignmentChanged;
-  final int? Function(_ExtractedThermalPoint point)
-      assignedMeasurementForPoint;
+  onAssignmentChanged;
+  final int? Function(_ExtractedThermalPoint point) assignedMeasurementForPoint;
 
   const _PointAssignmentPanel({
     required this.data,
@@ -2392,10 +2626,9 @@ class _PointAssignmentPanel extends StatelessWidget {
           children: [
             Text(
               'Meetpunten A en B',
-              style: Theme.of(context)
-                  .textTheme
-                  .titleSmall
-                  ?.copyWith(fontWeight: FontWeight.bold),
+              style: Theme.of(
+                context,
+              ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 8),
             if (allPoints.isEmpty)
@@ -2423,10 +2656,7 @@ class _DataField extends StatelessWidget {
   final String label;
   final String value;
 
-  const _DataField({
-    required this.label,
-    required this.value,
-  });
+  const _DataField({required this.label, required this.value});
 
   @override
   Widget build(BuildContext context) {
@@ -2436,8 +2666,10 @@ class _DataField extends StatelessWidget {
         decoration: InputDecoration(
           labelText: label,
           isDense: true,
-          contentPadding:
-              const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 12,
+            vertical: 10,
+          ),
           border: const OutlineInputBorder(),
         ),
         child: Text(
@@ -2490,8 +2722,10 @@ class _PointRow extends StatelessWidget {
               initialValue: assignedMeasurement,
               decoration: const InputDecoration(
                 isDense: true,
-                contentPadding:
-                    EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                contentPadding: EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 8,
+                ),
                 border: OutlineInputBorder(),
               ),
               items: [
@@ -2502,8 +2736,10 @@ class _PointRow extends StatelessWidget {
                 for (int i = 1; i <= 6; i++)
                   DropdownMenuItem<int?>(
                     value: i,
-                    child:
-                        Text('Meting $i', style: const TextStyle(fontSize: 13)),
+                    child: Text(
+                      'Meting $i',
+                      style: const TextStyle(fontSize: 13),
+                    ),
                   ),
               ],
               onChanged: onAssignmentChanged,
@@ -2515,15 +2751,11 @@ class _PointRow extends StatelessWidget {
   }
 }
 
-
 class _ChipLabel extends StatelessWidget {
   final String text;
   final bool filled;
 
-  const _ChipLabel({
-    required this.text,
-    this.filled = false,
-  });
+  const _ChipLabel({required this.text, this.filled = false});
 
   @override
   Widget build(BuildContext context) {
@@ -2662,11 +2894,11 @@ class _RecentImageEntry {
   }
 
   Map<String, dynamic> toJson() => {
-        'path': path,
-        'fileName': fileName,
-        'subtitle': subtitle,
-        'lastOpened': lastOpened.toIso8601String(),
-      };
+    'path': path,
+    'fileName': fileName,
+    'subtitle': subtitle,
+    'lastOpened': lastOpened.toIso8601String(),
+  };
 }
 
 class _MeasurementBinding {
@@ -2753,7 +2985,6 @@ class _DeltaTCorrected {
   });
 }
 
-
 // ─── Kruis-vergelijking alle metingen ─────────────────────────────────────────
 
 class _KEntry {
@@ -2784,18 +3015,18 @@ class _KEntry {
   });
 
   _KEntry copyWith({double? snr, SnrLevel? snrLevel}) => _KEntry(
-        id: id,
-        label: label,
-        sourceLabel: sourceLabel,
-        color: color,
-        current: current,
-        temperature: temperature,
-        deltaT: deltaT,
-        k: k,
-        dk: dk,
-        snr: snr ?? this.snr,
-        snrLevel: snrLevel ?? this.snrLevel,
-      );
+    id: id,
+    label: label,
+    sourceLabel: sourceLabel,
+    color: color,
+    current: current,
+    temperature: temperature,
+    deltaT: deltaT,
+    k: k,
+    dk: dk,
+    snr: snr ?? this.snr,
+    snrLevel: snrLevel ?? this.snrLevel,
+  );
 }
 
 class _CrossComparisonResult {
@@ -2823,38 +3054,43 @@ class _CrossComparisonCard extends StatelessWidget {
     final kRef = result.kRef;
 
     // Determine overall verdict
-    final worstLevel = entries.fold<SnrLevel>(
-      SnrLevel.notSignificant,
-      (prev, e) {
-        final lv = e.snrLevel ?? SnrLevel.notSignificant;
-        if (lv == SnrLevel.significant) return SnrLevel.significant;
-        if (prev == SnrLevel.significant) return SnrLevel.significant;
-        if (lv == SnrLevel.uncertain) return SnrLevel.uncertain;
-        return prev;
-      },
-    );
+    final worstLevel = entries.fold<SnrLevel>(SnrLevel.notSignificant, (
+      prev,
+      e,
+    ) {
+      final lv = e.snrLevel ?? SnrLevel.notSignificant;
+      if (lv == SnrLevel.significant) return SnrLevel.significant;
+      if (prev == SnrLevel.significant) return SnrLevel.significant;
+      if (lv == SnrLevel.uncertain) return SnrLevel.uncertain;
+      return prev;
+    });
 
-    final (headerColor, headerBg, headerIcon, verdictText) = switch (worstLevel) {
+    final (
+      headerColor,
+      headerBg,
+      headerIcon,
+      verdictText,
+    ) = switch (worstLevel) {
       SnrLevel.significant => (
-          AppTheme.statusFault,
-          AppTheme.statusFault.withValues(alpha: 0.08),
-          Icons.warning_amber_rounded,
-          'Eén of meer metingen wijken significant af van de referentie. '
-              'Mogelijke slechte verbinding aanwezig.',
-        ),
+        AppTheme.statusFault,
+        AppTheme.statusFault.withValues(alpha: 0.08),
+        Icons.warning_amber_rounded,
+        'Eén of meer metingen wijken significant af van de referentie. '
+            'Mogelijke slechte verbinding aanwezig.',
+      ),
       SnrLevel.uncertain => (
-          AppTheme.statusWarning,
-          AppTheme.statusWarning.withValues(alpha: 0.08),
-          Icons.help_outline_rounded,
-          'Eén of meer metingen wijken mogelijk af van de referentie. '
-              'Aanvullend onderzoek aanbevolen.',
-        ),
+        AppTheme.statusWarning,
+        AppTheme.statusWarning.withValues(alpha: 0.08),
+        Icons.help_outline_rounded,
+        'Eén of meer metingen wijken mogelijk af van de referentie. '
+            'Aanvullend onderzoek aanbevolen.',
+      ),
       _ => (
-          AppTheme.statusOk,
-          AppTheme.statusOk.withValues(alpha: 0.08),
-          Icons.check_circle_outline_rounded,
-          'Geen significante afwijkingen tussen de metingen gevonden.',
-        ),
+        AppTheme.statusOk,
+        AppTheme.statusOk.withValues(alpha: 0.08),
+        Icons.check_circle_outline_rounded,
+        'Geen aantoonbare afwijkingen gevonden — verschillen vallen binnen de meetonzekerheid.',
+      ),
     };
 
     return Card(
@@ -2876,8 +3112,9 @@ class _CrossComparisonCard extends StatelessWidget {
                 Expanded(
                   child: Text(
                     'Vergelijking alle metingen — K-rangschikking',
-                    style: theme.textTheme.titleSmall
-                        ?.copyWith(fontWeight: FontWeight.bold),
+                    style: theme.textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ),
               ],
@@ -2896,7 +3133,8 @@ class _CrossComparisonCard extends StatelessWidget {
             const Divider(height: 8),
 
             // Rows
-            for (final e in entries) _KTableRow(entry: e, kMax: kMax, kRef: kRef),
+            for (final e in entries)
+              _KTableRow(entry: e, kMax: kMax, kRef: kRef),
 
             const Divider(height: 20),
 
@@ -2938,10 +3176,10 @@ class _KTableRow extends StatelessWidget {
   }) : isHeader = false;
 
   const _KTableRow.header()
-      : entry = null,
-        kMax = 1,
-        kRef = null,
-        isHeader = true;
+    : entry = null,
+      kMax = 1,
+      kRef = null,
+      isHeader = true;
 
   @override
   Widget build(BuildContext context) {
@@ -2952,38 +3190,50 @@ class _KTableRow extends StatelessWidget {
           children: [
             SizedBox(
               width: 70,
-              child: Text('Meting',
-                  style: TextStyle(
-                      fontSize: 11,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.grey.shade600)),
+              child: Text(
+                'Meting',
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.grey.shade600,
+                ),
+              ),
             ),
             const SizedBox(width: 6),
             SizedBox(
               width: 90,
-              child: Text('K (°C/A²)',
-                  style: TextStyle(
-                      fontSize: 11,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.grey.shade600,
-                      fontFamily: 'monospace')),
+              child: Text(
+                'K (°C/A²)',
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.grey.shade600,
+                  fontFamily: 'monospace',
+                ),
+              ),
             ),
             const SizedBox(width: 6),
             SizedBox(
               width: 50,
-              child: Text('K/K_ref',
-                  style: TextStyle(
-                      fontSize: 11,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.grey.shade600)),
+              child: Text(
+                'K/K_ref',
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.grey.shade600,
+                ),
+              ),
             ),
             const SizedBox(width: 6),
             Expanded(
-              child: Text('SNR vs ref.',
-                  style: TextStyle(
-                      fontSize: 11,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.grey.shade600)),
+              child: Text(
+                'SNR vs ref.',
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.grey.shade600,
+                ),
+              ),
             ),
           ],
         ),
@@ -3001,7 +3251,9 @@ class _KTableRow extends StatelessWidget {
       SnrLevel.significant => (AppTheme.statusFault, 'Significant'),
       SnrLevel.uncertain => (AppTheme.statusWarning, 'Onzeker'),
       SnrLevel.notSignificant =>
-        isRef ? (AppTheme.statusOk, 'Referentie') : (AppTheme.statusOk, 'OK'),
+        isRef
+            ? (AppTheme.statusOk, 'Referentie')
+            : (AppTheme.statusOk, 'Niet aantoonbaar'),
       SnrLevel.invalid => (Colors.grey, '—'),
     };
 
@@ -3019,13 +3271,19 @@ class _KTableRow extends StatelessWidget {
                     Container(
                       width: 8,
                       height: 8,
-                      decoration:
-                          BoxDecoration(color: e.color, shape: BoxShape.circle),
+                      decoration: BoxDecoration(
+                        color: e.color,
+                        shape: BoxShape.circle,
+                      ),
                     ),
                     const SizedBox(width: 4),
-                    Text(e.label,
-                        style: const TextStyle(
-                            fontSize: 12, fontWeight: FontWeight.w600)),
+                    Text(
+                      e.label,
+                      style: const TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -3035,9 +3293,10 @@ class _KTableRow extends StatelessWidget {
                 child: Text(
                   e.k.toStringAsFixed(3),
                   style: const TextStyle(
-                      fontSize: 12,
-                      fontFamily: 'monospace',
-                      fontWeight: FontWeight.bold),
+                    fontSize: 12,
+                    fontFamily: 'monospace',
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ),
               const SizedBox(width: 6),
@@ -3056,8 +3315,10 @@ class _KTableRow extends StatelessWidget {
               const SizedBox(width: 6),
               Expanded(
                 child: Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 7,
+                    vertical: 2,
+                  ),
                   decoration: BoxDecoration(
                     color: levelColor.withValues(alpha: 0.12),
                     borderRadius: BorderRadius.circular(10),
@@ -3068,9 +3329,10 @@ class _KTableRow extends StatelessWidget {
                         ? '${snr.toStringAsFixed(1)}  —  $levelLabel'
                         : levelLabel,
                     style: TextStyle(
-                        fontSize: 10,
-                        fontWeight: FontWeight.bold,
-                        color: levelColor),
+                      fontSize: 10,
+                      fontWeight: FontWeight.bold,
+                      color: levelColor,
+                    ),
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),
@@ -3107,4 +3369,3 @@ class _KTableRow extends StatelessWidget {
     );
   }
 }
-

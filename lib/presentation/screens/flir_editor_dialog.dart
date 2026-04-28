@@ -19,7 +19,11 @@ class FlirEditorDialog extends StatefulWidget {
     this.initialInfo,
   });
 
-  static Future<void> show(BuildContext context, String imagePath, {FlirExtractResult? info}) {
+  static Future<void> show(
+    BuildContext context,
+    String imagePath, {
+    FlirExtractResult? info,
+  }) {
     return showDialog(
       context: context,
       barrierDismissible: false,
@@ -86,7 +90,8 @@ class _FlirEditorDialogState extends State<FlirEditorDialog> {
     final ext = widget.imagePath.contains('.')
         ? widget.imagePath.substring(widget.imagePath.lastIndexOf('.'))
         : '.jpg';
-    _workingPath = '${Directory.systemTemp.path}/flir_editor_work_$_sessionId$ext';
+    _workingPath =
+        '${Directory.systemTemp.path}/flir_editor_work_$_sessionId$ext';
     File(widget.imagePath).copySync(_workingPath);
 
     _info = widget.initialInfo;
@@ -104,14 +109,18 @@ class _FlirEditorDialogState extends State<FlirEditorDialog> {
 
   void _closeEditor() {
     // Copy working file back to original so changes persist
-    try { File(_workingPath).copySync(widget.imagePath); } catch (_) {}
+    try {
+      File(_workingPath).copySync(widget.imagePath);
+    } catch (_) {}
     Navigator.of(context).pop();
   }
 
   @override
   void dispose() {
     _zoomController.dispose();
-    try { File(_workingPath).deleteSync(); } catch (_) {}
+    try {
+      File(_workingPath).deleteSync();
+    } catch (_) {}
     super.dispose();
   }
 
@@ -223,7 +232,12 @@ class _FlirEditorDialogState extends State<FlirEditorDialog> {
       setState(() => _loading = true);
       _renderCounter++;
       final outPath = _renderFile;
-      final result = await FlirExtractService.addSpot(_workingPath, outPath, x, y);
+      final result = await FlirExtractService.addSpot(
+        _workingPath,
+        outPath,
+        x,
+        y,
+      );
       if (!mounted) return;
 
       // Re-read info so the new spot appears in the overlay
@@ -234,7 +248,8 @@ class _FlirEditorDialogState extends State<FlirEditorDialog> {
         _loading = false;
         if (result?['ok'] == true) {
           _renderPath = outPath;
-          _statusMessage = 'Spot toegevoegd: ${(result!['temperature'] as num?)?.toStringAsFixed(1)} °C';
+          _statusMessage =
+              'Spot toegevoegd: ${(result!['temperature'] as num?)?.toStringAsFixed(1)} °C';
         }
         if (updatedInfo != null && updatedInfo.ok) _info = updatedInfo;
       });
@@ -251,13 +266,21 @@ class _FlirEditorDialogState extends State<FlirEditorDialog> {
     });
   }
 
-  Future<void> _onAddIsotherm(FlirIsothermType type, double temp1, double? temp2) async {
+  Future<void> _onAddIsotherm(
+    FlirIsothermType type,
+    double temp1,
+    double? temp2,
+  ) async {
     setState(() => _loading = true);
     _renderCounter++;
     final outPath = _renderFile;
     await FlirExtractService.addIsotherm(
-      _workingPath, outPath, type, temp1,
-      temp2: temp2, palette: _palette,
+      _workingPath,
+      outPath,
+      type,
+      temp1,
+      temp2: temp2,
+      palette: _palette,
     );
     if (!mounted) return;
     setState(() {
@@ -274,7 +297,9 @@ class _FlirEditorDialogState extends State<FlirEditorDialog> {
     _renderCounter++;
     final outPath = _renderFile;
     final result = await FlirExtractService.removeSpot(
-      _workingPath, outPath, spotId,
+      _workingPath,
+      outPath,
+      spotId,
     );
     if (!mounted) return;
 
@@ -298,7 +323,11 @@ class _FlirEditorDialogState extends State<FlirEditorDialog> {
     _renderCounter++;
     final outPath = _renderFile;
     final result = await FlirExtractService.moveSpot(
-      _workingPath, outPath, spotId, newX, newY,
+      _workingPath,
+      outPath,
+      spotId,
+      newX,
+      newY,
     );
     if (!mounted) return;
 
@@ -311,7 +340,8 @@ class _FlirEditorDialogState extends State<FlirEditorDialog> {
       _dragOffset = null;
       if (result?['ok'] == true) {
         _renderPath = outPath;
-        _statusMessage = 'Spot $spotId verplaatst naar ($newX, $newY): '
+        _statusMessage =
+            'Spot $spotId verplaatst naar ($newX, $newY): '
             '${(result!['temperature'] as num?)?.toStringAsFixed(1)} °C';
       }
       if (updatedInfo != null && updatedInfo.ok) _info = updatedInfo;
@@ -342,7 +372,10 @@ class _FlirEditorDialogState extends State<FlirEditorDialog> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('Map: $dir', style: const TextStyle(fontSize: 12, color: Colors.black54)),
+              Text(
+                'Map: $dir',
+                style: const TextStyle(fontSize: 12, color: Colors.black54),
+              ),
               const SizedBox(height: 12),
               TextField(
                 controller: nameCtrl,
@@ -356,7 +389,10 @@ class _FlirEditorDialogState extends State<FlirEditorDialog> {
           ),
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Annuleren')),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Annuleren'),
+          ),
           FilledButton(
             onPressed: () => Navigator.pop(ctx, nameCtrl.text.trim()),
             child: const Text('Opslaan'),
@@ -374,10 +410,16 @@ class _FlirEditorDialogState extends State<FlirEditorDialog> {
     });
 
     // Determine format from extension
-    final outExt = chosenName.contains('.') ? chosenName.split('.').last.toLowerCase() : 'jpeg';
+    final outExt = chosenName.contains('.')
+        ? chosenName.split('.').last.toLowerCase()
+        : 'jpeg';
     final format = outExt == 'png' ? 'png' : 'jpeg';
 
-    final ok = await FlirExtractService.save(_workingPath, outPath, format: format);
+    final ok = await FlirExtractService.save(
+      _workingPath,
+      outPath,
+      format: format,
+    );
 
     if (!mounted) return;
     setState(() {
@@ -393,7 +435,9 @@ class _FlirEditorDialogState extends State<FlirEditorDialog> {
     return Dialog.fullscreen(
       child: Scaffold(
         appBar: AppBar(
-          title: Text('FLIR Editor — ${Uri.file(widget.imagePath).pathSegments.last}'),
+          title: Text(
+            'FLIR Editor — ${Uri.file(widget.imagePath).pathSegments.last}',
+          ),
           leading: IconButton(
             icon: const Icon(Icons.close),
             onPressed: _closeEditor,
@@ -418,8 +462,12 @@ class _FlirEditorDialogState extends State<FlirEditorDialog> {
               const Padding(
                 padding: EdgeInsets.symmetric(horizontal: 16),
                 child: SizedBox(
-                  width: 18, height: 18,
-                  child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                  width: 18,
+                  height: 18,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: Colors.white,
+                  ),
                 ),
               ),
           ],
@@ -427,15 +475,9 @@ class _FlirEditorDialogState extends State<FlirEditorDialog> {
         body: Row(
           children: [
             // Left: rendered image
-            Expanded(
-              flex: 3,
-              child: _buildImagePanel(),
-            ),
+            Expanded(flex: 3, child: _buildImagePanel()),
             // Right: controls
-            SizedBox(
-              width: 340,
-              child: _buildControlPanel(),
-            ),
+            SizedBox(width: 340, child: _buildControlPanel()),
           ],
         ),
       ),
@@ -459,11 +501,17 @@ class _FlirEditorDialogState extends State<FlirEditorDialog> {
                 if (_cursorTemp != null)
                   Text(
                     '${_cursorTemp!.toStringAsFixed(2)} °C  ($_cursorX, $_cursorY)',
-                    style: const TextStyle(color: Colors.white, fontFamily: 'monospace', fontSize: 13),
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontFamily: 'monospace',
+                      fontSize: 13,
+                    ),
                   )
                 else
-                  const Text('Klik op de afbeelding voor temperatuur',
-                      style: TextStyle(color: Colors.white38, fontSize: 12)),
+                  const Text(
+                    'Klik op de afbeelding voor temperatuur',
+                    style: TextStyle(color: Colors.white38, fontSize: 12),
+                  ),
                 const Spacer(),
                 Text(
                   'Palet: ${_palette.displayName}  |  ${_colorDist.displayName}',
@@ -479,7 +527,12 @@ class _FlirEditorDialogState extends State<FlirEditorDialog> {
                     builder: (context) {
                       final file = File(_renderPath!);
                       if (!file.existsSync()) {
-                        return const Center(child: Text('Render niet gevonden', style: TextStyle(color: Colors.white54)));
+                        return const Center(
+                          child: Text(
+                            'Render niet gevonden',
+                            style: TextStyle(color: Colors.white54),
+                          ),
+                        );
                       }
                       final info = _info;
                       final imgW = info?.width.toDouble() ?? 1;
@@ -492,18 +545,17 @@ class _FlirEditorDialogState extends State<FlirEditorDialog> {
                         minScale: 0.25,
                         maxScale: 4.0,
                         onInteractionEnd: (_) {
-                          final scale = _zoomController.value.getMaxScaleOnAxis();
+                          final scale = _zoomController.value
+                              .getMaxScaleOnAxis();
                           setState(() => _zoomLevel = scale);
                         },
                         child: Listener(
                           onPointerDown: (event) {
                             final lx = event.localPosition.dx;
                             final ly = event.localPosition.dy;
-                            if (lx < 0 || ly < 0 || lx > imgW || ly > imgH) return;
-                            _onImageTap(
-                              Offset(lx, ly),
-                              Size(imgW, imgH),
-                            );
+                            if (lx < 0 || ly < 0 || lx > imgW || ly > imgH)
+                              return;
+                            _onImageTap(Offset(lx, ly), Size(imgW, imgH));
                           },
                           child: SizedBox(
                             width: imgW,
@@ -522,38 +574,59 @@ class _FlirEditorDialogState extends State<FlirEditorDialog> {
                                   for (final spot in info.spots)
                                     if (spot.isValid)
                                       Positioned(
-                                        left: (_draggingSpotId == spot.id && _dragOffset != null
-                                            ? _dragOffset!.dx
-                                            : spot.x.toDouble()) - 6,
-                                        top: (_draggingSpotId == spot.id && _dragOffset != null
-                                            ? _dragOffset!.dy
-                                            : spot.y.toDouble()) - 6,
+                                        left:
+                                            (_draggingSpotId == spot.id &&
+                                                    _dragOffset != null
+                                                ? _dragOffset!.dx
+                                                : spot.x.toDouble()) -
+                                            6,
+                                        top:
+                                            (_draggingSpotId == spot.id &&
+                                                    _dragOffset != null
+                                                ? _dragOffset!.dy
+                                                : spot.y.toDouble()) -
+                                            6,
                                         child: GestureDetector(
                                           onPanStart: (_) {
                                             setState(() {
                                               _draggingSpotId = spot.id;
-                                              _dragOffset = Offset(spot.x.toDouble(), spot.y.toDouble());
+                                              _dragOffset = Offset(
+                                                spot.x.toDouble(),
+                                                spot.y.toDouble(),
+                                              );
                                             });
                                           },
                                           onPanUpdate: (details) {
                                             setState(() {
                                               _dragOffset = Offset(
-                                                (_dragOffset!.dx + details.delta.dx).clamp(0, imgW),
-                                                (_dragOffset!.dy + details.delta.dy).clamp(0, imgH),
+                                                (_dragOffset!.dx +
+                                                        details.delta.dx)
+                                                    .clamp(0, imgW),
+                                                (_dragOffset!.dy +
+                                                        details.delta.dy)
+                                                    .clamp(0, imgH),
                                               );
                                             });
                                           },
                                           onPanEnd: (_) {
-                                            if (_dragOffset != null && _draggingSpotId != null) {
-                                              final nx = _dragOffset!.dx.round();
-                                              final ny = _dragOffset!.dy.round();
+                                            if (_dragOffset != null &&
+                                                _draggingSpotId != null) {
+                                              final nx = _dragOffset!.dx
+                                                  .round();
+                                              final ny = _dragOffset!.dy
+                                                  .round();
                                               // Don't clear drag state here – _onMoveSpot clears it after update
-                                              _onMoveSpot(_draggingSpotId!, nx, ny);
+                                              _onMoveSpot(
+                                                _draggingSpotId!,
+                                                nx,
+                                                ny,
+                                              );
                                             }
                                           },
                                           child: _SpotMarker(
                                             spot: spot,
-                                            isDragging: _draggingSpotId == spot.id,
+                                            isDragging:
+                                                _draggingSpotId == spot.id,
                                           ),
                                         ),
                                       ),
@@ -574,10 +647,17 @@ class _FlirEditorDialogState extends State<FlirEditorDialog> {
             child: Row(
               children: [
                 IconButton(
-                  icon: const Icon(Icons.remove, size: 16, color: Colors.white70),
+                  icon: const Icon(
+                    Icons.remove,
+                    size: 16,
+                    color: Colors.white70,
+                  ),
                   onPressed: () => _setZoom(_zoomLevel - 0.25),
                   padding: EdgeInsets.zero,
-                  constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
+                  constraints: const BoxConstraints(
+                    minWidth: 28,
+                    minHeight: 28,
+                  ),
                   tooltip: 'Uitzoomen',
                 ),
                 Expanded(
@@ -593,20 +673,34 @@ class _FlirEditorDialogState extends State<FlirEditorDialog> {
                   icon: const Icon(Icons.add, size: 16, color: Colors.white70),
                   onPressed: () => _setZoom(_zoomLevel + 0.25),
                   padding: EdgeInsets.zero,
-                  constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
+                  constraints: const BoxConstraints(
+                    minWidth: 28,
+                    minHeight: 28,
+                  ),
                   tooltip: 'Inzoomen',
                 ),
                 const SizedBox(width: 4),
                 Text(
                   '${(_zoomLevel * 100).round()}%',
-                  style: const TextStyle(color: Colors.white70, fontSize: 11, fontFamily: 'monospace'),
+                  style: const TextStyle(
+                    color: Colors.white70,
+                    fontSize: 11,
+                    fontFamily: 'monospace',
+                  ),
                 ),
                 const SizedBox(width: 4),
                 IconButton(
-                  icon: const Icon(Icons.fit_screen, size: 16, color: Colors.white70),
+                  icon: const Icon(
+                    Icons.fit_screen,
+                    size: 16,
+                    color: Colors.white70,
+                  ),
                   onPressed: () => _setZoom(1.0),
                   padding: EdgeInsets.zero,
-                  constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
+                  constraints: const BoxConstraints(
+                    minWidth: 28,
+                    minHeight: 28,
+                  ),
                   tooltip: '100%',
                 ),
               ],
@@ -639,7 +733,10 @@ class _FlirEditorDialogState extends State<FlirEditorDialog> {
     return Card(
       margin: const EdgeInsets.only(bottom: 8),
       child: ExpansionTile(
-        title: Text(title, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
+        title: Text(
+          title,
+          style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
+        ),
         initiallyExpanded: title == 'Kleurpalet',
         childrenPadding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
         children: [child],
@@ -690,7 +787,10 @@ class _FlirEditorDialogState extends State<FlirEditorDialog> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         SwitchListTile(
-          title: const Text('Handmatige schaal', style: TextStyle(fontSize: 13)),
+          title: const Text(
+            'Handmatige schaal',
+            style: TextStyle(fontSize: 13),
+          ),
           value: _customScale,
           dense: true,
           contentPadding: EdgeInsets.zero,
@@ -706,7 +806,8 @@ class _FlirEditorDialogState extends State<FlirEditorDialog> {
               Expanded(
                 child: Slider(
                   value: _scaleMin,
-                  min: -40, max: 150,
+                  min: -40,
+                  max: 150,
                   label: '${_scaleMin.toStringAsFixed(0)} °C',
                   onChanged: (v) => setState(() => _scaleMin = v),
                   onChangeEnd: (_) => _onScaleChanged(),
@@ -714,8 +815,10 @@ class _FlirEditorDialogState extends State<FlirEditorDialog> {
               ),
               SizedBox(
                 width: 50,
-                child: Text('${_scaleMin.toStringAsFixed(0)} °C',
-                    style: const TextStyle(fontSize: 11, fontFamily: 'monospace')),
+                child: Text(
+                  '${_scaleMin.toStringAsFixed(0)} °C',
+                  style: const TextStyle(fontSize: 11, fontFamily: 'monospace'),
+                ),
               ),
             ],
           ),
@@ -725,7 +828,8 @@ class _FlirEditorDialogState extends State<FlirEditorDialog> {
               Expanded(
                 child: Slider(
                   value: _scaleMax,
-                  min: -40, max: 150,
+                  min: -40,
+                  max: 150,
                   label: '${_scaleMax.toStringAsFixed(0)} °C',
                   onChanged: (v) => setState(() => _scaleMax = v),
                   onChangeEnd: (_) => _onScaleChanged(),
@@ -733,8 +837,10 @@ class _FlirEditorDialogState extends State<FlirEditorDialog> {
               ),
               SizedBox(
                 width: 50,
-                child: Text('${_scaleMax.toStringAsFixed(0)} °C',
-                    style: const TextStyle(fontSize: 11, fontFamily: 'monospace')),
+                child: Text(
+                  '${_scaleMax.toStringAsFixed(0)} °C',
+                  style: const TextStyle(fontSize: 11, fontFamily: 'monospace'),
+                ),
               ),
             ],
           ),
@@ -748,10 +854,38 @@ class _FlirEditorDialogState extends State<FlirEditorDialog> {
   Widget _buildParamsControls() {
     return Column(
       children: [
-        _paramRow('Emissiviteit', _emissivity, 0.01, 1.0, (v) => _emissivity = v, decimals: 2),
-        _paramRow('Afstand (m)', _distance, 0.1, 100, (v) => _distance = v, decimals: 1),
-        _paramRow('Geref. temp. (°C)', _reflectedTemp, -40, 150, (v) => _reflectedTemp = v, decimals: 0),
-        _paramRow('Luchtvocht. (%)', _humidity, 0, 100, (v) => _humidity = v, decimals: 0),
+        _paramRow(
+          'Emissiviteit',
+          _emissivity,
+          0.01,
+          1.0,
+          (v) => _emissivity = v,
+          decimals: 2,
+        ),
+        _paramRow(
+          'Afstand (m)',
+          _distance,
+          0.1,
+          100,
+          (v) => _distance = v,
+          decimals: 1,
+        ),
+        _paramRow(
+          'Geref. temp. (°C)',
+          _reflectedTemp,
+          -40,
+          150,
+          (v) => _reflectedTemp = v,
+          decimals: 0,
+        ),
+        _paramRow(
+          'Luchtvocht. (%)',
+          _humidity,
+          0,
+          100,
+          (v) => _humidity = v,
+          decimals: 0,
+        ),
         const SizedBox(height: 8),
         FilledButton.icon(
           onPressed: _onParamsApply,
@@ -763,7 +897,14 @@ class _FlirEditorDialogState extends State<FlirEditorDialog> {
     );
   }
 
-  Widget _paramRow(String label, double value, double min, double max, ValueChanged<double> onChanged, {int decimals = 1}) {
+  Widget _paramRow(
+    String label,
+    double value,
+    double min,
+    double max,
+    ValueChanged<double> onChanged, {
+    int decimals = 1,
+  }) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 2),
       child: Row(
@@ -775,7 +916,8 @@ class _FlirEditorDialogState extends State<FlirEditorDialog> {
           Expanded(
             child: Slider(
               value: value.clamp(min, max),
-              min: min, max: max,
+              min: min,
+              max: max,
               onChanged: (v) => setState(() => onChanged(v)),
             ),
           ),
@@ -797,8 +939,10 @@ class _FlirEditorDialogState extends State<FlirEditorDialog> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text('Klik op de afbeelding na het selecteren van een tool.',
-            style: TextStyle(fontSize: 11, color: Colors.grey)),
+        const Text(
+          'Klik op de afbeelding na het selecteren van een tool.',
+          style: TextStyle(fontSize: 11, color: Colors.grey),
+        ),
         const SizedBox(height: 8),
         Wrap(
           spacing: 6,
@@ -833,43 +977,24 @@ class _FlirEditorDialogState extends State<FlirEditorDialog> {
 
   Widget _buildSpotList() {
     final spots = _info?.spots ?? [];
+    final imageWidth = _info?.width ?? 0;
+    final imageHeight = _info?.height ?? 0;
     if (spots.isEmpty) {
-      return const Text('Geen meetpunten beschikbaar.', style: TextStyle(fontSize: 12, color: Colors.grey));
+      return const Text(
+        'Geen meetpunten beschikbaar.',
+        style: TextStyle(fontSize: 12, color: Colors.grey),
+      );
     }
     return Column(
       children: spots.map((s) {
-        return Padding(
-          padding: const EdgeInsets.symmetric(vertical: 2),
-          child: Row(
-            children: [
-              Container(
-                width: 24, height: 24,
-                alignment: Alignment.center,
-                decoration: BoxDecoration(
-                  color: AppTheme.primary.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Text('${s.id}', style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: AppTheme.primary)),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Text(s.label.isNotEmpty ? s.label : 'Sp${s.id}',
-                    style: const TextStyle(fontSize: 12)),
-              ),
-              Text(
-                '${s.temperature.toStringAsFixed(2)} °C',
-                style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, fontFamily: 'monospace'),
-              ),
-              const SizedBox(width: 4),
-              IconButton(
-                icon: const Icon(Icons.delete_outline, size: 16, color: Colors.red),
-                tooltip: 'Spot verwijderen',
-                padding: EdgeInsets.zero,
-                constraints: const BoxConstraints(minWidth: 24, minHeight: 24),
-                onPressed: _loading ? null : () => _onRemoveSpot(s.id),
-              ),
-            ],
-          ),
+        return _SpotListItem(
+          key: ValueKey('spot_${s.id}_${s.x}_${s.y}'),
+          spot: s,
+          maxX: imageWidth > 0 ? imageWidth - 1 : 0,
+          maxY: imageHeight > 0 ? imageHeight - 1 : 0,
+          loading: _loading,
+          onRemove: () => _onRemoveSpot(s.id),
+          onMove: (x, y) => _onMoveSpot(s.id, x, y),
         );
       }).toList(),
     );
@@ -879,7 +1004,12 @@ class _FlirEditorDialogState extends State<FlirEditorDialog> {
 // ── Isotherm form ──────────────────────────────────────────────────────────
 
 class _IsothermForm extends StatefulWidget {
-  final Future<void> Function(FlirIsothermType type, double temp1, double? temp2) onAdd;
+  final Future<void> Function(
+    FlirIsothermType type,
+    double temp1,
+    double? temp2,
+  )
+  onAdd;
   const _IsothermForm({required this.onAdd});
 
   @override
@@ -905,13 +1035,24 @@ class _IsothermFormState extends State<_IsothermForm> {
       children: [
         SegmentedButton<FlirIsothermType>(
           segments: const [
-            ButtonSegment(value: FlirIsothermType.above, label: Text('Boven', style: TextStyle(fontSize: 11))),
-            ButtonSegment(value: FlirIsothermType.below, label: Text('Onder', style: TextStyle(fontSize: 11))),
-            ButtonSegment(value: FlirIsothermType.interval, label: Text('Interval', style: TextStyle(fontSize: 11))),
+            ButtonSegment(
+              value: FlirIsothermType.above,
+              label: Text('Boven', style: TextStyle(fontSize: 11)),
+            ),
+            ButtonSegment(
+              value: FlirIsothermType.below,
+              label: Text('Onder', style: TextStyle(fontSize: 11)),
+            ),
+            ButtonSegment(
+              value: FlirIsothermType.interval,
+              label: Text('Interval', style: TextStyle(fontSize: 11)),
+            ),
           ],
           selected: {_type},
           onSelectionChanged: (s) => setState(() => _type = s.first),
-          style: SegmentedButton.styleFrom(visualDensity: VisualDensity.compact),
+          style: SegmentedButton.styleFrom(
+            visualDensity: VisualDensity.compact,
+          ),
         ),
         const SizedBox(height: 8),
         Row(
@@ -920,7 +1061,9 @@ class _IsothermFormState extends State<_IsothermForm> {
               child: TextField(
                 controller: _temp1Ctrl,
                 decoration: InputDecoration(
-                  labelText: _type == FlirIsothermType.interval ? 'Min °C' : 'Temp °C',
+                  labelText: _type == FlirIsothermType.interval
+                      ? 'Min °C'
+                      : 'Temp °C',
                   isDense: true,
                   border: const OutlineInputBorder(),
                 ),
@@ -954,7 +1097,10 @@ class _IsothermFormState extends State<_IsothermForm> {
             widget.onAdd(_type, t1, t2);
           },
           icon: const Icon(Icons.add, size: 16),
-          label: const Text('Isotherm toevoegen', style: TextStyle(fontSize: 12)),
+          label: const Text(
+            'Isotherm toevoegen',
+            style: TextStyle(fontSize: 12),
+          ),
           style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(36)),
         ),
       ],
@@ -965,6 +1111,196 @@ class _IsothermFormState extends State<_IsothermForm> {
 // ── Measurement tool enum ──────────────────────────────────────────────────
 
 enum _MeasurementTool { none, spot }
+
+class _SpotListItem extends StatefulWidget {
+  final FlirSpot spot;
+  final int maxX;
+  final int maxY;
+  final bool loading;
+  final VoidCallback onRemove;
+  final Future<void> Function(int x, int y) onMove;
+
+  const _SpotListItem({
+    super.key,
+    required this.spot,
+    required this.maxX,
+    required this.maxY,
+    required this.loading,
+    required this.onRemove,
+    required this.onMove,
+  });
+
+  @override
+  State<_SpotListItem> createState() => _SpotListItemState();
+}
+
+class _SpotListItemState extends State<_SpotListItem> {
+  late final TextEditingController _xCtrl;
+  late final TextEditingController _yCtrl;
+
+  @override
+  void initState() {
+    super.initState();
+    _xCtrl = TextEditingController(text: widget.spot.x.toString());
+    _yCtrl = TextEditingController(text: widget.spot.y.toString());
+  }
+
+  @override
+  void didUpdateWidget(covariant _SpotListItem oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.spot.x != widget.spot.x) {
+      _xCtrl.text = widget.spot.x.toString();
+    }
+    if (oldWidget.spot.y != widget.spot.y) {
+      _yCtrl.text = widget.spot.y.toString();
+    }
+  }
+
+  @override
+  void dispose() {
+    _xCtrl.dispose();
+    _yCtrl.dispose();
+    super.dispose();
+  }
+
+  Future<void> _applyCoordinates() async {
+    final x = int.tryParse(_xCtrl.text);
+    final y = int.tryParse(_yCtrl.text);
+    if (x == null || y == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Voer geldige gehele x- en y-waarden in.'),
+        ),
+      );
+      return;
+    }
+
+    final clampedX = x.clamp(0, widget.maxX);
+    final clampedY = y.clamp(0, widget.maxY);
+    _xCtrl.text = clampedX.toString();
+    _yCtrl.text = clampedY.toString();
+    await widget.onMove(clampedX, clampedY);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final s = widget.spot;
+    return Container(
+      margin: const EdgeInsets.symmetric(vertical: 4),
+      padding: const EdgeInsets.all(8),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: AppTheme.primary.withValues(alpha: 0.12)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 24,
+                height: 24,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  color: AppTheme.primary.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Text(
+                  '${s.id}',
+                  style: const TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.bold,
+                    color: AppTheme.primary,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  s.label.isNotEmpty ? s.label : 'Sp${s.id}',
+                  style: const TextStyle(fontSize: 12),
+                ),
+              ),
+              Text(
+                '${s.temperature.toStringAsFixed(2)} °C',
+                style: const TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                  fontFamily: 'monospace',
+                ),
+              ),
+              const SizedBox(width: 4),
+              IconButton(
+                icon: const Icon(
+                  Icons.delete_outline,
+                  size: 16,
+                  color: Colors.red,
+                ),
+                tooltip: 'Spot verwijderen',
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(minWidth: 24, minHeight: 24),
+                onPressed: widget.loading ? null : widget.onRemove,
+              ),
+            ],
+          ),
+          if (s.isValid) ...[
+            const SizedBox(height: 6),
+            Text(
+              'Huidige positie: x=${s.x}, y=${s.y}',
+              style: const TextStyle(
+                fontSize: 11,
+                color: Colors.black54,
+                fontFamily: 'monospace',
+              ),
+            ),
+            const SizedBox(height: 6),
+            Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: _xCtrl,
+                    enabled: !widget.loading,
+                    keyboardType: TextInputType.number,
+                    decoration: const InputDecoration(
+                      labelText: 'x',
+                      isDense: true,
+                      border: OutlineInputBorder(),
+                    ),
+                    onSubmitted: (_) => _applyCoordinates(),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: TextField(
+                    controller: _yCtrl,
+                    enabled: !widget.loading,
+                    keyboardType: TextInputType.number,
+                    decoration: const InputDecoration(
+                      labelText: 'y',
+                      isDense: true,
+                      border: OutlineInputBorder(),
+                    ),
+                    onSubmitted: (_) => _applyCoordinates(),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                FilledButton(
+                  onPressed: widget.loading ? null : _applyCoordinates,
+                  style: FilledButton.styleFrom(
+                    minimumSize: const Size(0, 40),
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                  ),
+                  child: const Text('Pas toe', style: TextStyle(fontSize: 11)),
+                ),
+              ],
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
 
 // ── Spot marker overlay widget ────────────────────────────────────────────
 
@@ -1022,8 +1358,8 @@ class _SpotMarker extends StatelessWidget {
                   fontFamily: 'monospace',
                   height: 1.2,
                 ),
+              ),
             ),
-          ),
           ],
         ),
       ),

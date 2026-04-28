@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
 import '../../core/theme/app_theme.dart';
+import '../widgets/analysis_top_nav.dart';
+import 'regression_analysis_screen.dart';
 
 // ── Invoermodel ───────────────────────────────────────────────────────────────
 
@@ -8,11 +10,13 @@ class NprMeasurementData {
   final String label;
   final Color color;
   final double? temperature; // null = veld leeg / ongeldig
+  final double? current;
 
   const NprMeasurementData({
     required this.label,
     required this.color,
     required this.temperature,
+    this.current,
   });
 }
 
@@ -38,6 +42,35 @@ class _NprAssessmentScreenState extends State<NprAssessmentScreen> {
   _NprTempClass _tempClass = _nprTempClasses[1]; // A
   _NprComponentPart _componentPart = _nprComponentParts.first;
 
+  void _openTopNavScreen(AnalysisTopNavScreen screen) {
+    switch (screen) {
+      case AnalysisTopNavScreen.npr:
+        return;
+      case AnalysisTopNavScreen.thermal:
+        Navigator.of(context).pop();
+        return;
+      case AnalysisTopNavScreen.regression:
+        final measurements = widget.measurements
+            .map(
+              (m) => RegressionMeasurementData(
+                label: m.label,
+                color: m.color,
+                temperature: m.temperature,
+                current: m.current,
+              ),
+            )
+            .toList();
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(
+            builder: (_) => RegressionAnalysisScreen(
+              measurements: measurements,
+              tamb: widget.tamb,
+            ),
+          ),
+        );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -46,6 +79,13 @@ class _NprAssessmentScreenState extends State<NprAssessmentScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('NPR 8040-1 — methoden 1, 2 en 3'),
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(44),
+          child: AnalysisTopNav(
+            current: AnalysisTopNavScreen.npr,
+            onSelected: _openTopNavScreen,
+          ),
+        ),
       ),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
@@ -112,13 +152,15 @@ class _NprAssessmentScreenState extends State<NprAssessmentScreen> {
                   border: OutlineInputBorder(),
                 ),
                 items: _nprInsulationMaterials
-                    .map((m) => DropdownMenuItem(
-                          value: m,
-                          child: Text(
-                            '${m.name}  —  ${m.tMax.toStringAsFixed(0)} °C',
-                            style: const TextStyle(fontSize: 13),
-                          ),
-                        ))
+                    .map(
+                      (m) => DropdownMenuItem(
+                        value: m,
+                        child: Text(
+                          '${m.name}  —  ${m.tMax.toStringAsFixed(0)} °C',
+                          style: const TextStyle(fontSize: 13),
+                        ),
+                      ),
+                    )
                     .toList(),
                 onChanged: (v) => setState(() => _material = v ?? _material),
               ),
@@ -146,8 +188,9 @@ class _NprAssessmentScreenState extends State<NprAssessmentScreen> {
               const SizedBox(height: 8),
               _buildMeasurementsTable(
                 evaluate: (tmc) {
-                  final tMax =
-                      _isOnInsulation ? _material.tMax - 5 : _material.tMax;
+                  final tMax = _isOnInsulation
+                      ? _material.tMax - 5
+                      : _material.tMax;
                   return _NprEvalRow(
                     measured: tmc,
                     limit: tMax,
@@ -176,13 +219,15 @@ class _NprAssessmentScreenState extends State<NprAssessmentScreen> {
                   border: OutlineInputBorder(),
                 ),
                 items: _nprTempClasses
-                    .map((c) => DropdownMenuItem(
-                          value: c,
-                          child: Text(
-                            'Klasse ${c.letter}  —  klasse ${c.classTemp.toStringAsFixed(0)} °C, Tmax ${c.tMax.toStringAsFixed(0)} °C',
-                            style: const TextStyle(fontSize: 13),
-                          ),
-                        ))
+                    .map(
+                      (c) => DropdownMenuItem(
+                        value: c,
+                        child: Text(
+                          'Klasse ${c.letter}  —  klasse ${c.classTemp.toStringAsFixed(0)} °C, Tmax ${c.tMax.toStringAsFixed(0)} °C',
+                          style: const TextStyle(fontSize: 13),
+                        ),
+                      ),
+                    )
                     .toList(),
                 onChanged: (v) => setState(() => _tempClass = v ?? _tempClass),
               ),
@@ -216,14 +261,16 @@ class _NprAssessmentScreenState extends State<NprAssessmentScreen> {
                   border: OutlineInputBorder(),
                 ),
                 items: _nprComponentParts
-                    .map((p) => DropdownMenuItem(
-                          value: p,
-                          child: Text(
-                            '${p.component} — ${p.part} (ΔTsmax ${p.dTsMax.toStringAsFixed(0)} K)',
-                            style: const TextStyle(fontSize: 13),
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ))
+                    .map(
+                      (p) => DropdownMenuItem(
+                        value: p,
+                        child: Text(
+                          '${p.component} — ${p.part} (ΔTsmax ${p.dTsMax.toStringAsFixed(0)} K)',
+                          style: const TextStyle(fontSize: 13),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    )
                     .toList(),
                 onChanged: (v) =>
                     setState(() => _componentPart = v ?? _componentPart),
@@ -282,35 +329,42 @@ class _NprAssessmentScreenState extends State<NprAssessmentScreen> {
     final rows = <Widget>[];
     for (final m in widget.measurements) {
       if (m.temperature == null) {
-        rows.add(_NprResultLine(
-          label: m.label,
-          color: m.color,
-          valueText: '—',
-          statusText: 'Geen temperatuur',
-          statusColor: Colors.grey,
-        ));
+        rows.add(
+          _NprResultLine(
+            label: m.label,
+            color: m.color,
+            valueText: '—',
+            statusText: 'Geen temperatuur',
+            statusColor: Colors.grey,
+          ),
+        );
         continue;
       }
       final eval = evaluate(m.temperature!);
       if (eval.invalid) {
-        rows.add(_NprResultLine(
-          label: m.label,
-          color: m.color,
-          valueText: '—',
-          statusText: eval.invalidReason ?? 'Ongeldig',
-          statusColor: Colors.grey,
-        ));
+        rows.add(
+          _NprResultLine(
+            label: m.label,
+            color: m.color,
+            valueText: '—',
+            statusText: eval.invalidReason ?? 'Ongeldig',
+            statusColor: Colors.grey,
+          ),
+        );
         continue;
       }
-      rows.add(_NprResultLine(
-        label: m.label,
-        color: m.color,
-        valueText:
-            '$valueLabel = ${eval.measured.toStringAsFixed(1)} ${eval.unit}   |   ${eval.limitLabel} = ${eval.limit.toStringAsFixed(0)} ${eval.unit}',
-        statusText:
-            eval.exceeded ? 'Directe actie vereist' : 'Binnen grenswaarde',
-        statusColor: eval.exceeded ? AppTheme.statusFault : AppTheme.statusOk,
-      ));
+      rows.add(
+        _NprResultLine(
+          label: m.label,
+          color: m.color,
+          valueText:
+              '$valueLabel = ${eval.measured.toStringAsFixed(1)} ${eval.unit}   |   ${eval.limitLabel} = ${eval.limit.toStringAsFixed(0)} ${eval.unit}',
+          statusText: eval.exceeded
+              ? 'Directe actie vereist'
+              : 'Binnen grenswaarde',
+          statusColor: eval.exceeded ? AppTheme.statusFault : AppTheme.statusOk,
+        ),
+      );
     }
     return Column(children: rows);
   }
@@ -360,14 +414,20 @@ class _SectionCard extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(title,
-                          style: theme.textTheme.labelLarge?.copyWith(
-                            fontWeight: FontWeight.bold,
-                            color: AppTheme.primaryDark,
-                          )),
-                      Text(subtitle,
-                          style: TextStyle(
-                              fontSize: 11, color: Colors.grey.shade700)),
+                      Text(
+                        title,
+                        style: theme.textTheme.labelLarge?.copyWith(
+                          fontWeight: FontWeight.bold,
+                          color: AppTheme.primaryDark,
+                        ),
+                      ),
+                      Text(
+                        subtitle,
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: Colors.grey.shade700,
+                        ),
+                      ),
                     ],
                   ),
                 ),
@@ -427,18 +487,73 @@ const List<_NprComponentPart> _nprComponentParts = [
   _NprComponentPart('Aardlek(automaat)', 'Behuizing', 70, 'NEN-EN-IEC 61439'),
   _NprComponentPart('Installatieautomaat', 'Behuizing', 70, 'NEN-EN-IEC 61439'),
   _NprComponentPart('Schakelaar/scheider', 'Behuizing', 70, 'NEN-EN-IEC 61439'),
-  _NprComponentPart('Motorbeveiliging spoel', 'Klasse A', 85, 'NEN-EN-IEC 60947-4-1'),
-  _NprComponentPart('Motorbeveiliging spoel', 'Klasse E', 100, 'NEN-EN-IEC 60947-4-1'),
-  _NprComponentPart('Motorbeveiliging spoel', 'Klasse B', 110, 'NEN-EN-IEC 60947-4-1'),
-  _NprComponentPart('Motorbeveiliging spoel', 'Klasse F', 135, 'NEN-EN-IEC 60947-4-1'),
-  _NprComponentPart('Motorbeveiliging spoel', 'Klasse H', 160, 'NEN-EN-IEC 60947-4-1'),
-  _NprComponentPart('Magneetschakelaar spoel', 'Klasse A', 85, 'NEN-EN-IEC 61095'),
-  _NprComponentPart('Magneetschakelaar spoel', 'Klasse E', 100, 'NEN-EN-IEC 61095'),
-  _NprComponentPart('Magneetschakelaar spoel', 'Klasse B', 110, 'NEN-EN-IEC 61095'),
-  _NprComponentPart('Magneetschakelaar spoel', 'Klasse F', 135, 'NEN-EN-IEC 61095'),
-  _NprComponentPart('Magneetschakelaar spoel', 'Klasse H', 160, 'NEN-EN-IEC 61095'),
+  _NprComponentPart(
+    'Motorbeveiliging spoel',
+    'Klasse A',
+    85,
+    'NEN-EN-IEC 60947-4-1',
+  ),
+  _NprComponentPart(
+    'Motorbeveiliging spoel',
+    'Klasse E',
+    100,
+    'NEN-EN-IEC 60947-4-1',
+  ),
+  _NprComponentPart(
+    'Motorbeveiliging spoel',
+    'Klasse B',
+    110,
+    'NEN-EN-IEC 60947-4-1',
+  ),
+  _NprComponentPart(
+    'Motorbeveiliging spoel',
+    'Klasse F',
+    135,
+    'NEN-EN-IEC 60947-4-1',
+  ),
+  _NprComponentPart(
+    'Motorbeveiliging spoel',
+    'Klasse H',
+    160,
+    'NEN-EN-IEC 60947-4-1',
+  ),
+  _NprComponentPart(
+    'Magneetschakelaar spoel',
+    'Klasse A',
+    85,
+    'NEN-EN-IEC 61095',
+  ),
+  _NprComponentPart(
+    'Magneetschakelaar spoel',
+    'Klasse E',
+    100,
+    'NEN-EN-IEC 61095',
+  ),
+  _NprComponentPart(
+    'Magneetschakelaar spoel',
+    'Klasse B',
+    110,
+    'NEN-EN-IEC 61095',
+  ),
+  _NprComponentPart(
+    'Magneetschakelaar spoel',
+    'Klasse F',
+    135,
+    'NEN-EN-IEC 61095',
+  ),
+  _NprComponentPart(
+    'Magneetschakelaar spoel',
+    'Klasse H',
+    160,
+    'NEN-EN-IEC 61095',
+  ),
   _NprComponentPart('Bedieningsknop', 'Kunststof', 25, 'NEN-EN-IEC 60947-1'),
-  _NprComponentPart('Schakel-/verdeelinrichting', 'Kunststof', 40, 'NEN-EN-IEC 61439-1'),
+  _NprComponentPart(
+    'Schakel-/verdeelinrichting',
+    'Kunststof',
+    40,
+    'NEN-EN-IEC 61439-1',
+  ),
 ];
 
 // ── Hulpklassen ───────────────────────────────────────────────────────────────
@@ -492,16 +607,20 @@ class _NprResultLine extends StatelessWidget {
           const SizedBox(width: 8),
           SizedBox(
             width: 62,
-            child: Text(label,
-                style: const TextStyle(
-                    fontSize: 12, fontWeight: FontWeight.w600)),
+            child: Text(
+              label,
+              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+            ),
           ),
           Expanded(
-            child: Text(valueText,
-                style: const TextStyle(
-                    fontSize: 11,
-                    fontFamily: 'monospace',
-                    color: Colors.black)),
+            child: Text(
+              valueText,
+              style: const TextStyle(
+                fontSize: 11,
+                fontFamily: 'monospace',
+                color: Colors.black,
+              ),
+            ),
           ),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
@@ -510,11 +629,14 @@ class _NprResultLine extends StatelessWidget {
               borderRadius: BorderRadius.circular(10),
               border: Border.all(color: statusColor),
             ),
-            child: Text(statusText,
-                style: TextStyle(
-                    fontSize: 10,
-                    fontWeight: FontWeight.bold,
-                    color: statusColor)),
+            child: Text(
+              statusText,
+              style: TextStyle(
+                fontSize: 10,
+                fontWeight: FontWeight.bold,
+                color: statusColor,
+              ),
+            ),
           ),
         ],
       ),

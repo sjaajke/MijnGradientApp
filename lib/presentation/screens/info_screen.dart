@@ -11,9 +11,7 @@ class InfoScreen extends StatelessWidget {
     final theme = Theme.of(context);
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Hoe werken de berekeningen?'),
-      ),
+      appBar: AppBar(title: const Text('Hoe werken de berekeningen?')),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
         children: [
@@ -41,8 +39,8 @@ class InfoScreen extends StatelessWidget {
                 const SizedBox(height: 8),
                 Text(
                   'De app berekent de genormaliseerde thermische weerstand K uit FLIR-meetpunten. '
-                  'Door K-waarden van twee meetpunten te vergelijken wordt met foutpropagatie '
-                  'en een signaal-ruisverhouding (SNR) bepaald of een afwijking significant is.',
+                  'Daarbovenop toont de app stroomgecorrigeerde ΔT-formules, een K-vergelijking '
+                  'tegen een referentiemeting, regressie van reeksen A/B en een NPR 8040-1 beoordeling.',
                   style: theme.textTheme.bodyMedium?.copyWith(
                     color: Colors.white.withValues(alpha: 0.92),
                     height: 1.45,
@@ -62,8 +60,8 @@ class InfoScreen extends StatelessWidget {
             paragraphs: [
               'Open een FLIR radiometrische afbeelding (JPEG met ingebedde thermische data).',
               'De app leest de meetpunten (spots) uit de afbeelding en kent ze automatisch toe aan 6 metingen, gegroepeerd in 3 paren: 1↔2, 3↔4, 5↔6.',
-              'Per meting worden ingevuld: stroom I (A), temperatuur T (°C), meetfout stroom δI (A) en meetfout temperatuur δT (°C).',
-              'De omgevingstemperatuur T_amb wordt gedeeld door alle metingen.',
+              'Temperatuur T (°C) wordt per meting ingevuld; de overige invoer is gedeeld: T_amb, exponent n, I₁ voor metingen 1/3/5, I₂ voor metingen 2/4/6, plus δI en δT.',
+              'De foutpropagatie gebruikt dus één gedeelde stroomfout δI en één gedeelde temperatuurfout δT voor alle 6 metingen.',
               'Via de FLIR Editor kun je spots verplaatsen, toevoegen en de afbeelding opslaan. De temperatuurwaarden worden automatisch bijgewerkt.',
             ],
           ),
@@ -110,18 +108,9 @@ class InfoScreen extends StatelessWidget {
           _FormulaCard(
             title: 'Formules — foutpropagatie',
             rows: const [
-              (
-                'δK',
-                'δK = K × √( (δΔT/ΔT)² + (2×δI/I)² )',
-              ),
-              (
-                'δΔT',
-                'δΔT = δT  (meetfout temperatuur)',
-              ),
-              (
-                'δI',
-                'δI = opgegeven meetfout stroom',
-              ),
+              ('δK', 'δK = K × √( (δΔT/ΔT)² + (2×δI/I)² )'),
+              ('δΔT', 'δΔT = δT  (meetfout temperatuur)'),
+              ('δI', 'δI = opgegeven meetfout stroom'),
             ],
           ),
 
@@ -158,11 +147,11 @@ class InfoScreen extends StatelessWidget {
             icon: Icons.bolt_rounded,
             color: AppTheme.accent,
             paragraphs: [
-              'Naast de K-vergelijking worden 5 aanvullende formules berekend die het temperatuurverschil corrigeren voor stroom.',
-              'Deze formules zijn nuttig wanneer de stromen door beide geleiders verschillen (I_A ≠ I_B).',
+              'Naast de K-vergelijking toont het scherm meerdere aanvullende formules die het temperatuurverschil corrigeren voor stroom.',
+              'Deze formules zijn vooral nuttig wanneer de stromen door beide geleiders verschillen (I_A ≠ I_B).',
               'Alle formules gebruiken ΔT_A = T_A − T_amb en ΔT_B = T_B − T_amb als temperatuurverschillen boven omgeving.',
-              'De verhouding r = I_A²/I_B² wordt gebruikt om de temperatuurprofielen stroomgewogen te vergelijken.',
-              'Een waarde dicht bij nul duidt op thermisch identieke geleiders. Een significante afwijking wijst op een verschil in thermische weerstand.',
+              'Er zijn twee families: formules met I²-correctie en formules met een instelbare exponent n. Standaard staat n = 2.',
+              'Een uitkomst dicht bij nul, of een bijna gelijke waarde van ΔT_A/I_Aⁿ en ΔT_B/I_Bⁿ, duidt op thermisch vergelijkbaar gedrag.',
             ],
           ),
 
@@ -171,23 +160,31 @@ class InfoScreen extends StatelessWidget {
             title: 'Formules — ΔT-gecorrigeerd',
             rows: const [
               (
+                'ΔT%',
+                '[ΔT_A − (I_A/I_B)ⁿ × ΔT_B] / ΔT_A × 100%\nRelatieve afwijking met instelbare exponent n',
+              ),
+              (
+                'ΔT_n',
+                'ΔT_A − (I_A/I_B)ⁿ × ΔT_B\nAbsolute afwijking met instelbare exponent n',
+              ),
+              (
+                'ΔT/Iⁿ',
+                'ΔT_A/I_Aⁿ  versus  ΔT_B/I_Bⁿ\nDe kaart markeert of beide vrijwel gelijk zijn',
+              ),
+              (
                 'ΔT_corr',
-                'ΔT_A − (I_A²/I_B²) × ΔT_B\nStroomgewogen temperatuurverschil',
-              ),
-              (
-                'Δ(I²/ΔT)',
-                'I_A²/ΔT_A − I_B²/ΔT_B\nVerschil in weerstandsverhouding per punt',
-              ),
-              (
-                'Δ(I²-ratio)',
-                '(I_A²/I_B²) − (ΔT_A/ΔT_B)\nVerhouding stroom² vs. verhouding temperatuur',
-              ),
-              (
-                'ΔT₂',
                 'ΔT_A − (I_A²/I_B²) × ΔT_B\nStroomgewogen temperatuurverschil per punt',
               ),
               (
-                'Δ(ΔT/I²)  ← aanbevolen',
+                'Δ(I²/ΔT)',
+                'I_A²/ΔT_A − I_B²/ΔT_B\nVerschil in omgekeerde thermische verhouding',
+              ),
+              (
+                'Δ(I²-ratio)',
+                '(I_A²/I_B²) − (ΔT_A/ΔT_B)\nVerschil tussen stroomverhouding en temperatuurverhouding',
+              ),
+              (
+                'Δ(ΔT/I²)',
                 'ΔT_A/I_A² − ΔT_B/I_B²  [°C/A²]\nDirect verschil in thermische weerstand',
               ),
             ],
@@ -215,30 +212,30 @@ class InfoScreen extends StatelessWidget {
             icon: Icons.leaderboard_rounded,
             color: AppTheme.chartB,
             paragraphs: [
-              'Na het drukken op "Bereken" verschijnt een overzichtskaart met alle 6 K-waarden gesorteerd van hoog naar laag.',
-              'De meting met de laagste K wordt als referentie gebruikt — dit is het punt met de beste (laagste) thermische weerstand.',
-              'Per meting wordt K/K_ref getoond: hoe veel hoger de thermische weerstand is ten opzichte van de referentie.',
-              'De SNR per meting ten opzichte van de referentie is (K_n − K_ref) / √(δK_n² + δK_ref²). SNR > 3 is significant.',
-              'Een horizontale balkgrafiek toont visueel de verhouding van elke K ten opzichte van de hoogste gemeten waarde.',
+              'Na het drukken op "Bereken" verschijnt een overzichtskaart met alle bruikbare K-waarden, gesorteerd van hoog naar laag.',
+              'Voor de referentievergelijking gebruikt het huidige scherm standaard Meting 1 als referentie. Als die ontbreekt, wordt de eerste beschikbare meting gebruikt.',
+              'Per meting wordt K/K_ref getoond: hoe de K-waarde zich verhoudt tot die referentiemeting.',
+              'De SNR per meting ten opzichte van de referentie is een getekende vergelijking: (K_n − K_ref) / √(δK_n² + δK_ref²). Vooral positieve waarden boven 3 tellen als significante verhoging.',
+              'De balklengte in de tabel is alleen een visuele schaal ten opzichte van de hoogste K in de lijst.',
               'Gebruik de K-rangschikking samen met de paarsgewijze vergelijking voor een volledig beeld van alle meetpunten.',
             ],
           ),
 
           // ── Formules K-rangschikking ──────────────────────────────────────
           _FormulaCard(
-            title: 'Formules — K-rangschikking (alle metingen)',
+            title: 'Formules — K-rangschikking (actuele schermlogica)',
             rows: const [
               (
                 'K_ref',
-                'K_ref = min(K₁ … K₆)  [°C/A²]\nReferentie = laagste thermische weerstand',
+                'K_ref = K₁  [°C/A²]\nAls meting 1 ontbreekt: eerste beschikbare meting',
               ),
               (
                 'K/K_ref',
-                'verhouding = K_n / K_ref  [dimensieloos]\nHoe veel hoger dan de referentie',
+                'verhouding = K_n / K_ref  [dimensieloos]\nVergelijking met de gekozen referentie',
               ),
               (
                 'SNR_n',
-                'SNR_n = (K_n − K_ref) / √(δK_n² + δK_ref²)\n> 3 significant  |  1–3 onzeker  |  < 1 niet significant',
+                'SNR_n = (K_n − K_ref) / √(δK_n² + δK_ref²)\nPositief en ≥ 3: significant hoger dan referentie',
               ),
             ],
           ),
@@ -281,6 +278,41 @@ class InfoScreen extends StatelessWidget {
             ],
           ),
 
+          // ── Stap 9: Regressie ────────────────────────────────────────────
+          const _StepCard(
+            step: '9',
+            title: 'Regressieanalyse — stroomnormalisatie & diagnose',
+            icon: Icons.show_chart_rounded,
+            color: AppTheme.primaryDark,
+            paragraphs: [
+              'Het regressiescherm vergelijkt twee reeksen: Reeks A = metingen 1/3/5 en Reeks B = metingen 2/4/6.',
+              'Optioneel wordt eerst stroomnormalisatie toegepast naar een referentiestroom I_ref. Daardoor worden temperatuurverschillen herleid naar gelijke belasting.',
+              'Daarna wordt per reeks een lineaire regressie over 3 equidistante punten berekend: helling m, intercept b, fit-kwaliteit R² en residu van het middelpunt.',
+              'De diagnose vergelijkt vooral Δm = |m_A − m_B| met de ingestelde tolerantie. Kleine Δm betekent vergelijkbaar warmteverloop.',
+              'Bij gelijke hellingen maar duidelijk verschillende starttemperaturen meldt het scherm een vermoedelijke stroomonbalans. Bij grotere afwijkingen volgt een thermografische diagnose, zoals lokale hotspot of overgangsweerstand nabij aansluiting.',
+            ],
+          ),
+
+          _FormulaCard(
+            title: 'Formules — regressie & normalisatie',
+            rows: const [
+              (
+                'ΔT_norm',
+                'ΔT_norm = (T − T_amb) × (I_ref/I)²\nStroomnormalisatie naar één referentiestroom',
+              ),
+              ('T_norm', 'T_norm = T_amb + ΔT_norm'),
+              (
+                'm',
+                'm = (T₃ − T₁) / 2  [°C/positie]\nHelling van de lineaire regressie',
+              ),
+              (
+                'Δm',
+                'Δm = |m_A − m_B|  [°C/positie]\nVergelijking van Reeks A en B',
+              ),
+              ('R²', 'R² < 0,50 laag  |  R² < 0,80 matig  |  R² ≥ 0,80 goed'),
+            ],
+          ),
+
           // ── FLIR SDK handleiding ──────────────────────────────────────────
           Card(
             clipBehavior: Clip.antiAlias,
@@ -299,17 +331,15 @@ class InfoScreen extends StatelessWidget {
               ),
               trailing: const Icon(Icons.chevron_right_rounded),
               onTap: () => Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (_) => const FlirSdkInfoScreen(),
-                ),
+                MaterialPageRoute(builder: (_) => const FlirSdkInfoScreen()),
               ),
             ),
           ),
           const SizedBox(height: 4),
 
-          // ── Stap 9: Sessies ────────────────────────────────────────────────
+          // ── Stap 10: Sessies ───────────────────────────────────────────────
           const _StepCard(
-            step: '9',
+            step: '10',
             title: 'Sessies opslaan en herladen',
             icon: Icons.save_outlined,
             color: AppTheme.primary,
@@ -401,22 +431,51 @@ class InfoScreen extends StatelessWidget {
                   const _HintRow(
                     label: 'K/K_ref ≈ 1',
                     description:
-                        'thermische weerstand vergelijkbaar met de referentie — geen afwijking.',
+                        'thermische weerstand vergelijkbaar met de gekozen referentiemeting.',
                   ),
                   const _HintRow(
-                    label: 'K/K_ref > 2',
+                    label: 'SNR_n ≥ 3',
                     description:
-                        'thermische weerstand meer dan twee keer zo hoog als de referentie — nader onderzoek aanbevolen.',
+                        'de meting ligt significant hoger dan de referentie en wijst op verhoogde thermische weerstand.',
                   ),
                   const _HintRow(
-                    label: 'SNR_n > 3',
+                    label: 'Negatieve SNR_n',
                     description:
-                        'significant hogere K dan de referentie — mogelijke slechte verbinding op dit meetpunt.',
+                        'de meting ligt lager dan de referentie; in deze kaart telt dat niet als afwijking naar boven.',
                   ),
                   const _HintRow(
                     label: 'Meerdere hoge K-waarden',
                     description:
                         'systematisch patroon — mogelijk verschil in doorsnede, materiaal of belasting.',
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    'Regressie & stroomnormalisatie',
+                    style: theme.textTheme.labelLarge?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: AppTheme.primaryDark,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  const _HintRow(
+                    label: 'Δm ≤ tolerantie',
+                    description:
+                        'Reeks A en B hebben vergelijkbaar thermisch verloop.',
+                  ),
+                  const _HintRow(
+                    label: 'Gelijke helling, ander niveau',
+                    description:
+                        'mogelijke stroomonbalans: vergelijkbaar verloop maar verschoven temperatuurprofiel.',
+                  ),
+                  const _HintRow(
+                    label: 'R² < 0,80',
+                    description:
+                        'het verloop is minder lineair; een lokale hotspot of verstoring is waarschijnlijker.',
+                  ),
+                  const _HintRow(
+                    label: 'Sterke dalende helling',
+                    description:
+                        'kan duiden op overgangsweerstand nabij de aansluiting.',
                   ),
                   const SizedBox(height: 12),
                   Text(
@@ -524,10 +583,7 @@ class _FormulaCard extends StatelessWidget {
   final String title;
   final List<(String, String)> rows;
 
-  const _FormulaCard({
-    required this.title,
-    required this.rows,
-  });
+  const _FormulaCard({required this.title, required this.rows});
 
   @override
   Widget build(BuildContext context) {
@@ -584,10 +640,7 @@ class _HintRow extends StatelessWidget {
   final String label;
   final String description;
 
-  const _HintRow({
-    required this.label,
-    required this.description,
-  });
+  const _HintRow({required this.label, required this.description});
 
   @override
   Widget build(BuildContext context) {
